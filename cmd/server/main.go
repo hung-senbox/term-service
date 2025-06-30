@@ -3,12 +3,12 @@ package main
 import (
 	"log"
 	"os"
-	"term-info-service/pkg/config"
-	"term-info-service/pkg/consul"
-	"term-info-service/pkg/db"
-	"term-info-service/pkg/router"
+	"term-service/pkg/config"
+	"term-service/pkg/consul"
+	"term-service/pkg/db"
+	"term-service/pkg/router"
 
-	"term-info-service/pkg/zap"
+	"term-service/pkg/zap"
 )
 
 func main() {

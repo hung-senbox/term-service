@@ -6,8 +6,8 @@ import (
 	"math/rand"
 	"net/http"
 	"strconv"
-	"term-info-service/pkg/config"
-	"term-info-service/pkg/zap"
+	"term-service/pkg/config"
+	"term-service/pkg/zap"
 	"time"
 
 	"github.com/hashicorp/consul/api"

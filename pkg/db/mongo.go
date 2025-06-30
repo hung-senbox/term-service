@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"term-info-service/pkg/config"
+	"term-service/pkg/config"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"

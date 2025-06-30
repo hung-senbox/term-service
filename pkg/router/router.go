@@ -1,9 +1,9 @@
 package router
 
 import (
-	"term-info-service/internal/term/handler"
-	"term-info-service/internal/term/repository"
-	"term-info-service/internal/term/service"
+	"term-service/internal/term/handler"
+	"term-service/internal/term/repository"
+	"term-service/internal/term/service"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"

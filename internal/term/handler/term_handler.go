@@ -6,13 +6,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"term-info-service/helper"
-	"term-info-service/internal/term/dto/request"
-	"term-info-service/internal/term/dto/response"
-	"term-info-service/internal/term/mappers"
-	"term-info-service/internal/term/model"
-	"term-info-service/internal/term/service"
-	pkg_helpder "term-info-service/pkg/helper"
+	"term-service/helper"
+	"term-service/internal/term/dto/request"
+	"term-service/internal/term/dto/response"
+	"term-service/internal/term/mappers"
+	"term-service/internal/term/middleware"
+	"term-service/internal/term/model"
+	"term-service/internal/term/service"
+	pkg_helpder "term-service/pkg/helper"
 )
 
 type TermHandler struct {
@@ -24,7 +25,7 @@ func NewHandler(s service.TermService) *TermHandler {
 }
 
 func (h *TermHandler) RegisterRoutes(r *gin.Engine) {
-	termGroup := r.Group("/api/v1/terms")
+	termGroup := r.Group("/api/v1/terms").Use(middleware.Secured())
 	{
 		termGroup.POST("", h.CreateTerm)
 		termGroup.GET("", h.ListTerms)
