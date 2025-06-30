@@ -23,15 +23,15 @@ func main() {
 
 	//consul
 	consulConn := consul.NewConsulConn(logger, cfg)
-	// consulClient := consulConn.Connect()
+	consulConn.Connect()
 	defer consulConn.Deregister()
 
 	//db
 	db.ConnectMongoDB()
 
 	r := router.SetupRouter(db.TermCollection)
-
-	if err := r.Run(":8080"); err != nil {
+	port := cfg.Server.Port
+	if err := r.Run(port); err != nil {
 		log.Fatal("Failed to run server:", err)
 	}
 }

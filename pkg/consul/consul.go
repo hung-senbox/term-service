@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	serviceName = "holiday-service"
+	serviceName = "term-service"
 	ttl         = time.Second * 15
-	checkId     = "holiday-service-health-check"
+	checkId     = "term-service-health-check"
 )
 
 var (
@@ -108,7 +108,7 @@ func (c *service) setupConsul() {
 		Name:    serviceName, // Service name
 		Port:    port,        // Service port
 		Address: hostname,    // Service address
-		Tags:    []string{"go", "holiday-service"},
+		Tags:    []string{"go", "term-service"},
 		Check:   check,
 	}
 
