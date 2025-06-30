@@ -1,0 +1,5 @@
+{
+  "title": "Semester 1", //required
+  "start_date": "2025-08-01", //required
+  "end_date": "2025-12-31" //required
+}
