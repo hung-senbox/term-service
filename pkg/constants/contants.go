@@ -105,7 +105,9 @@ const (
 	MinimumUsageTime = "minimum_usage_time"
 	MaximumUsageTime = "maximum_usage_time"
 
-	UserID = "user_id"
+	UserID    = "user_id"
+	UserName  = "user_name"
+	UserRoles = "user_roles"
 )
 
 type contextKey string
