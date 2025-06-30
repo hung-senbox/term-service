@@ -1,2 +1,4 @@
 # term-info-service
-copy config.example.yaml to config.yaml
+copy config.prod.yaml to config.yaml
+cd docker
+docker compose up -d
