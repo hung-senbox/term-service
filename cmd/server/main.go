@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"term-info-service/pkg/config"
 	"term-info-service/pkg/consul"
 	"term-info-service/pkg/db"
@@ -11,7 +12,12 @@ import (
 )
 
 func main() {
-	config.LoadConfig("configs/config.yaml")
+	filePath := os.Args[1]
+	if filePath == "" {
+		filePath = "configs/config.yaml"
+	}
+
+	config.LoadConfig(filePath)
 
 	cfg := config.AppConfig
 
@@ -31,7 +37,7 @@ func main() {
 
 	r := router.SetupRouter(db.TermCollection)
 	port := cfg.Server.Port
-	if err := r.Run(port); err != nil {
+	if err := r.Run(":" + port); err != nil {
 		log.Fatal("Failed to run server:", err)
 	}
 }

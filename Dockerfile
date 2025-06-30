@@ -27,7 +27,7 @@ RUN apk add --no-cache libc6-compat bash
 COPY --from=builder /app/api .
 
 # Copy the config.example.yaml file and rename it to config.yaml
-COPY ./configs/config.example.yaml ./configs/config.yaml
+COPY ./configs/config.prod.yaml ./configs/config.yaml
 
 # Copy the wait-for-it.sh script into the container
 COPY ./scripts/wait-for-it.sh /wait-for-it.sh
@@ -37,4 +37,4 @@ RUN chmod +x /wait-for-it.sh
 EXPOSE 8009
 
 # Set the entrypoint to wait for MariaDB to be ready before starting the application
-CMD ["/wait-for-it.sh", "term_db:27017", "--", "./api"] 
+CMD ["/wait-for-it.sh", "term_db:27017", "--", "./api", "/configs/config.yaml"] 

@@ -17,3 +17,11 @@ database:
     # user: "Senbox"
     # password: ""
     name: "term_service"
+
+consul:
+    host: "consul"
+    port: 8500
+    
+registry:
+  host: "localhost"
+

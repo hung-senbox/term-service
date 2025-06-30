@@ -44,7 +44,7 @@ func NewConsulConn(log zap.Logger, cfg *config.AppConfigStruct) *service {
 	}
 
 	defaultConfig = &api.Config{
-		Address: fmt.Sprintf("%s:%s", consulHost, cfg.Consul.Port), // Consul server address
+		Address: fmt.Sprintf("%s:%d", consulHost, cfg.Consul.Port), // Consul server address
 		HttpClient: &http.Client{
 			Timeout: 30 * time.Second, // Increase timeout to 30 seconds
 		},
