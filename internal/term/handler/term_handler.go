@@ -80,7 +80,8 @@ func (h *TermHandler) ListTerms(c *gin.Context) {
 		return
 	}
 
-	var res []response.TermResDTO
+	res := make([]response.TermResDTO, 0)
+
 	for _, t := range terms {
 		res = append(res, mappers.MapTermToResDTO(t))
 	}
