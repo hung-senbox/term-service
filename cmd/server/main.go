@@ -5,7 +5,7 @@ import (
 	"os"
 
 	// "os"
-	"term-service/logger"
+
 	"term-service/pkg/config"
 	"term-service/pkg/consul"
 	"term-service/pkg/db"
@@ -24,7 +24,7 @@ func main() {
 
 	cfg := config.AppConfig
 
-	logger.WriteLogData("info", map[string]any{"id": 123, "name": "Hung"})
+	// logger.WriteLogData("info", map[string]any{"id": 123, "name": "Hung"})
 
 	//logger
 	logger, err := zap.New(cfg)
