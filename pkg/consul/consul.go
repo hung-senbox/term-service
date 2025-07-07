@@ -92,7 +92,7 @@ func (c *service) updateHealthCheck() {
 }
 
 func (c *service) setupConsul() {
-	hostname := c.cfg.Consul.Host
+	hostname := c.cfg.Registry.Host
 	port, _ := strconv.Atoi(c.cfg.Server.Port)
 
 	// Health check (optional but recommended)
