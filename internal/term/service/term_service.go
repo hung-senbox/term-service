@@ -12,6 +12,7 @@ type TermService interface {
 	UpdateTerm(ctx context.Context, id string, term *model.Term) error
 	DeleteTerm(ctx context.Context, id string) error
 	ListTerms(ctx context.Context) ([]*model.Term, error)
+	GetCurrentTerm(ctx context.Context) (*model.Term, error)
 }
 
 type termService struct {
@@ -40,4 +41,8 @@ func (s *termService) DeleteTerm(ctx context.Context, id string) error {
 
 func (s *termService) ListTerms(ctx context.Context) ([]*model.Term, error) {
 	return s.repo.GetAll(ctx)
+}
+
+func (s *termService) GetCurrentTerm(ctx context.Context) (*model.Term, error) {
+	return s.repo.GetCurrentTerm(ctx)
 }

@@ -17,6 +17,7 @@ type TermRepository interface {
 	Update(ctx context.Context, id string, term *model.Term) error
 	Delete(ctx context.Context, id string) error
 	GetAll(ctx context.Context) ([]*model.Term, error)
+	GetCurrentTerm(ctx context.Context) (*model.Term, error)
 }
 
 type termRepository struct {
@@ -118,4 +119,25 @@ func (r *termRepository) GetAll(ctx context.Context) ([]*model.Term, error) {
 		terms = append(terms, &term)
 	}
 	return terms, nil
+}
+
+// GetCurrentTerm returns the current active term (where now is between start_date and end_date)
+func (r *termRepository) GetCurrentTerm(ctx context.Context) (*model.Term, error) {
+	now := time.Now()
+
+	filter := bson.M{
+		"start_date": bson.M{"$lte": now},
+		"end_date":   bson.M{"$gte": now},
+	}
+
+	var term model.Term
+	err := r.collection.FindOne(ctx, filter).Decode(&term)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil // No current term found, not an error
+		}
+		return nil, err
+	}
+
+	return &term, nil
 }

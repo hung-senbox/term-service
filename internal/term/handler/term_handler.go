@@ -32,6 +32,7 @@ func (h *TermHandler) RegisterRoutes(r *gin.Engine) {
 		termGroup.GET("/:id", h.GetTermByID)
 		termGroup.PUT("/:id", h.UpdateTerm)
 		termGroup.DELETE("/:id", h.DeleteTerm)
+		termGroup.GET("/current", h.GetCurrentTerm)
 	}
 }
 
@@ -173,4 +174,20 @@ func (h *TermHandler) DeleteTerm(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (h *TermHandler) GetCurrentTerm(c *gin.Context) {
+	term, err := h.service.GetCurrentTerm(c.Request.Context())
+	if err != nil {
+		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
+		return
+	}
+	if term == nil {
+		helper.SendError(c, http.StatusNotFound, nil, "No current term found")
+		return
+	}
+
+	res := mappers.MapTermToCurrentResDTO(term)
+
+	helper.SendSuccess(c, http.StatusOK, "Success", res)
 }

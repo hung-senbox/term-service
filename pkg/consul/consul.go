@@ -93,7 +93,7 @@ func (c *service) updateHealthCheck() {
 
 func (c *service) setupConsul() {
 	hostname := c.cfg.Consul.Host
-	port, _ := strconv.Atoi(c.cfg.App.API.Rest.Port)
+	port, _ := strconv.Atoi(c.cfg.Server.Port)
 
 	// Health check (optional but recommended)
 	check := &api.AgentServiceCheck{
@@ -135,7 +135,7 @@ func (c *service) setupConsul() {
 	}
 
 	go func() {
-		_ = plan.RunWithConfig(fmt.Sprintf("%s:%s", c.cfg.Consul.Host, c.cfg.Consul.Port), api.DefaultConfig())
+		_ = plan.RunWithConfig(fmt.Sprintf("%s:%d", c.cfg.Consul.Host, c.cfg.Consul.Port), api.DefaultConfig())
 	}()
 
 	err = c.client.Agent().ServiceRegister(registration)

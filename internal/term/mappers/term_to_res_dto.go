@@ -4,6 +4,7 @@ import (
 	"term-service/internal/term/dto/response"
 	"term-service/internal/term/model"
 	"term-service/pkg/helper"
+	"time"
 )
 
 func MapTermToResDTO(term *model.Term) response.TermResDTO {
@@ -22,4 +23,22 @@ func MapTermListToResDTO(terms []*model.Term) []response.TermResDTO {
 		result = append(result, MapTermToResDTO(term))
 	}
 	return result
+}
+
+func MapTermToCurrentResDTO(term *model.Term) response.CurrentTermResDTO {
+	layout := "2006-01-02"
+	now := time.Now()
+	remaining := int(term.EndDate.Sub(now).Hours() / 24)
+	if remaining < 0 {
+		remaining = 0
+	}
+
+	return response.CurrentTermResDTO{
+		ID:           term.ID.Hex(),
+		Title:        term.Title,
+		StartDate:    term.StartDate.Format(layout),
+		EndDate:      term.EndDate.Format(layout),
+		CreatedAt:    term.CreatedAt.Format(layout),
+		RemaningDate: helper.FormatRemainingDays(remaining),
+	}
 }
