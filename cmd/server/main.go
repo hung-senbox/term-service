@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"os"
+
 	// "os"
 	"term-service/logger"
 	"term-service/pkg/config"
@@ -13,12 +15,12 @@ import (
 )
 
 func main() {
-	// filePath := os.Args[1]
-	// if filePath == "" {
-	// 	filePath = "configs/config.yaml"
-	// }
+	filePath := os.Args[1]
+	if filePath == "" {
+		filePath = "configs/config.yaml"
+	}
 
-	config.LoadConfig("configs/config.yaml")
+	config.LoadConfig(filePath)
 
 	cfg := config.AppConfig
 
