@@ -19,7 +19,7 @@ database:
     name: "term_service"
 
 consul:
-    host: "consul"
+    host: "localhost"
     port: 8500
     
 registry:
