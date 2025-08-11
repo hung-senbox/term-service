@@ -9,6 +9,7 @@ import (
 type Term struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty"`
 	Title     string             `bson:"title"`
+	Color     string             `bson:"color"`
 	StartDate time.Time          `bson:"start_date"`
 	EndDate   time.Time          `bson:"end_date"`
 	CreatedAt time.Time          `bson:"created_at"`

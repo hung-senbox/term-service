@@ -11,6 +11,7 @@ func MapTermToResDTO(term *model.Term) response.TermResDTO {
 	return response.TermResDTO{
 		ID:        term.ID.Hex(),
 		Title:     term.Title,
+		Color:     term.Color,
 		StartDate: helper.FormatDate(term.StartDate),
 		EndDate:   helper.FormatDate(term.EndDate),
 		CreatedAt: helper.FormatDate(term.CreatedAt),
@@ -36,6 +37,7 @@ func MapTermToCurrentResDTO(term *model.Term) response.CurrentTermResDTO {
 	return response.CurrentTermResDTO{
 		ID:           term.ID.Hex(),
 		Title:        term.Title,
+		Color:        term.Color,
 		StartDate:    term.StartDate.Format(layout),
 		EndDate:      term.EndDate.Format(layout),
 		CreatedAt:    term.CreatedAt.Format(layout),

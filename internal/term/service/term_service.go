@@ -2,8 +2,12 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"term-service/internal/term/dto/request"
 	"term-service/internal/term/model"
 	"term-service/internal/term/repository"
+	pkg_helpder "term-service/pkg/helper"
+	"time"
 )
 
 type TermService interface {
@@ -13,6 +17,7 @@ type TermService interface {
 	DeleteTerm(ctx context.Context, id string) error
 	ListTerms(ctx context.Context) ([]*model.Term, error)
 	GetCurrentTerm(ctx context.Context) (*model.Term, error)
+	UploadTerms(ctx context.Context, req *request.UploadTermReqDTO) error
 }
 
 type termService struct {
@@ -45,4 +50,64 @@ func (s *termService) ListTerms(ctx context.Context) ([]*model.Term, error) {
 
 func (s *termService) GetCurrentTerm(ctx context.Context) (*model.Term, error) {
 	return s.repo.GetCurrentTerm(ctx)
+}
+
+func (s *termService) UploadTerms(ctx context.Context, req *request.UploadTermReqDTO) error {
+	// 1. Delete terms if any IDs provided
+	if len(req.DeleteTermIds) > 0 {
+		for _, id := range req.DeleteTermIds {
+			if err := s.repo.Delete(ctx, id); err != nil {
+				return fmt.Errorf("failed to delete term %s: %w", id, err)
+			}
+		}
+	}
+
+	// 2. Upsert terms
+	for _, t := range req.Terms {
+		startDate, err := time.Parse("2006-01-02", t.StartDate)
+		if err != nil {
+			return fmt.Errorf("invalid start_date for term %s: %w", t.Title, err)
+		}
+
+		endDate, err := time.Parse("2006-01-02", t.EndDate)
+		if err != nil {
+			return fmt.Errorf("invalid end_date for term %s: %w", t.Title, err)
+		}
+
+		if !pkg_helpder.ValidateDateRange(startDate, endDate) {
+			return fmt.Errorf("start_date must be before or equal to end_date for term %s", t.Title)
+		}
+
+		if t.ID != "" {
+			// Update existing term
+			existing, err := s.repo.GetByID(ctx, t.ID)
+			if err != nil {
+				return fmt.Errorf("term not found: %s", t.ID)
+			}
+			existing.Title = t.Title
+			existing.Color = t.Color
+			existing.StartDate = startDate
+			existing.EndDate = endDate
+			existing.UpdatedAt = time.Now()
+
+			if err := s.repo.Update(ctx, t.ID, existing); err != nil {
+				return fmt.Errorf("failed to update term %s: %w", t.ID, err)
+			}
+		} else {
+			// Create new term
+			newTerm := &model.Term{
+				Title:     t.Title,
+				Color:     t.Color,
+				StartDate: startDate,
+				EndDate:   endDate,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			}
+			if _, err := s.repo.Create(ctx, newTerm); err != nil {
+				return fmt.Errorf("failed to create term %s: %w", t.Title, err)
+			}
+		}
+	}
+
+	return nil
 }

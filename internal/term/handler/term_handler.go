@@ -25,14 +25,29 @@ func NewHandler(s service.TermService) *TermHandler {
 }
 
 func (h *TermHandler) RegisterRoutes(r *gin.Engine) {
-	termGroup := r.Group("/api/v1/terms").Use(middleware.Secured())
+	// Admin routes
+	adminGroup := r.Group("/api/v1/admin")
+	adminGroup.Use(middleware.Secured())
 	{
-		termGroup.POST("", h.CreateTerm)
-		termGroup.GET("", h.ListTerms)
-		termGroup.GET("/:id", h.GetTermByID)
-		termGroup.PUT("/:id", h.UpdateTerm)
-		termGroup.DELETE("/:id", h.DeleteTerm)
-		termGroup.GET("/current", h.GetCurrentTerm)
+		termsAdmin := adminGroup.Group("/terms")
+		{
+			termsAdmin.POST("", h.UploadTerm)
+			termsAdmin.GET("", h.ListTerms)
+			termsAdmin.GET("/:id", h.GetTermByID)
+			termsAdmin.PUT("/:id", h.UpdateTerm)
+			termsAdmin.DELETE("/:id", h.DeleteTerm)
+			termsAdmin.GET("/current", h.GetCurrentTerm)
+		}
+	}
+
+	// User routes
+	userGroup := r.Group("/api/v1")
+	userGroup.Use(middleware.Secured())
+	{
+		termsUser := userGroup.Group("/terms")
+		{
+			termsUser.GET("/current", h.GetCurrentTerm)
+		}
 	}
 }
 
@@ -190,4 +205,19 @@ func (h *TermHandler) GetCurrentTerm(c *gin.Context) {
 	res := mappers.MapTermToCurrentResDTO(term)
 
 	helper.SendSuccess(c, http.StatusOK, "Success", res)
+}
+
+func (h *TermHandler) UploadTerm(c *gin.Context) {
+	var req request.UploadTermReqDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
+		return
+	}
+
+	if err := h.service.UploadTerms(c.Request.Context(), &req); err != nil {
+		helper.SendError(c, http.StatusInternalServerError, err, err.Error())
+		return
+	}
+
+	helper.SendSuccess(c, http.StatusOK, "Upload term successful", nil)
 }
