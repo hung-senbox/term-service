@@ -28,8 +28,9 @@ func MapTermListToResDTO(terms []*model.Term) []response.TermResDTO {
 
 func MapTermToCurrentResDTO(term *model.Term) response.CurrentTermResDTO {
 	layout := "2006-01-02"
-	now := time.Now()
-	remaining := int(term.EndDate.Sub(now).Hours() / 24)
+	now := time.Now().In(term.EndDate.Location())
+
+	remaining := daysBetweenDateOnly(now, term.EndDate)
 	if remaining < 0 {
 		remaining = 0
 	}
@@ -43,4 +44,15 @@ func MapTermToCurrentResDTO(term *model.Term) response.CurrentTermResDTO {
 		CreatedAt:    term.CreatedAt.Format(layout),
 		RemaningDate: helper.FormatRemainingDays(remaining),
 	}
+}
+
+func daysBetweenDateOnly(start, end time.Time) int {
+	loc := end.Location()
+	sy, sm, sd := start.In(loc).Date()
+	ey, em, ed := end.In(loc).Date()
+
+	startDate := time.Date(sy, sm, sd, 0, 0, 0, 0, loc)
+	endDate := time.Date(ey, em, ed, 0, 0, 0, 0, loc)
+
+	return int(endDate.Sub(startDate).Hours() / 24)
 }

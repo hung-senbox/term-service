@@ -69,7 +69,7 @@ func RequireAdmin() gin.HandlerFunc {
 		roles := strings.Split(rolesStr, ",")
 		isAdmin := false
 		for _, role := range roles {
-			if strings.TrimSpace(role) == "Admin" {
+			if strings.TrimSpace(role) == "SuperAdmin" {
 				isAdmin = true
 				break
 			}

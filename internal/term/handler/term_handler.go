@@ -27,7 +27,7 @@ func NewHandler(s service.TermService) *TermHandler {
 func (h *TermHandler) RegisterRoutes(r *gin.Engine) {
 	// Admin routes
 	adminGroup := r.Group("/api/v1/admin")
-	adminGroup.Use(middleware.Secured())
+	adminGroup.Use(middleware.Secured(), middleware.RequireAdmin())
 	{
 		termsAdmin := adminGroup.Group("/terms")
 		{

@@ -107,7 +107,7 @@ const (
 
 	UserID    = "user_id"
 	UserName  = "user_name"
-	UserRoles = "user_roles"
+	UserRoles = "roles"
 )
 
 type contextKey string
