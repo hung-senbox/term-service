@@ -86,6 +86,8 @@ func (s *termService) UploadTerms(ctx context.Context, req *request.UploadTermRe
 			}
 			existing.Title = t.Title
 			existing.Color = t.Color
+			existing.PublishedMobile = t.PublishedMobile
+			existing.PublishedDesktop = t.PublishedDesktop
 			existing.StartDate = startDate
 			existing.EndDate = endDate
 			existing.UpdatedAt = time.Now()
@@ -96,12 +98,14 @@ func (s *termService) UploadTerms(ctx context.Context, req *request.UploadTermRe
 		} else {
 			// Create new term
 			newTerm := &model.Term{
-				Title:     t.Title,
-				Color:     t.Color,
-				StartDate: startDate,
-				EndDate:   endDate,
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
+				Title:            t.Title,
+				Color:            t.Color,
+				PublishedMobile:  t.PublishedMobile,
+				PublishedDesktop: t.PublishedDesktop,
+				StartDate:        startDate,
+				EndDate:          endDate,
+				CreatedAt:        time.Now(),
+				UpdatedAt:        time.Now(),
 			}
 			if _, err := s.repo.Create(ctx, newTerm); err != nil {
 				return fmt.Errorf("failed to create term %s: %w", t.Title, err)

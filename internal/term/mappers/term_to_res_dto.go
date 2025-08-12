@@ -9,12 +9,14 @@ import (
 
 func MapTermToResDTO(term *model.Term) response.TermResDTO {
 	return response.TermResDTO{
-		ID:        term.ID.Hex(),
-		Title:     term.Title,
-		Color:     term.Color,
-		StartDate: helper.FormatDate(term.StartDate),
-		EndDate:   helper.FormatDate(term.EndDate),
-		CreatedAt: helper.FormatDate(term.CreatedAt),
+		ID:               term.ID.Hex(),
+		Title:            term.Title,
+		Color:            term.Color,
+		PublishedMobile:  term.PublishedMobile,
+		PublishedDesktop: term.PublishedDesktop,
+		StartDate:        helper.FormatDate(term.StartDate),
+		EndDate:          helper.FormatDate(term.EndDate),
+		CreatedAt:        helper.FormatDate(term.CreatedAt),
 	}
 }
 

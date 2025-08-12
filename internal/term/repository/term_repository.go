@@ -68,10 +68,13 @@ func (r *termRepository) Update(ctx context.Context, id string, updated *model.T
 
 	update := bson.M{
 		"$set": bson.M{
-			"title":      updated.Title,
-			"start_date": updated.StartDate,
-			"end_date":   updated.EndDate,
-			"updated_at": updated.UpdatedAt,
+			"title":             updated.Title,
+			"start_date":        updated.StartDate,
+			"color":             updated.Color,
+			"published_mobile":  updated.PublishedMobile,
+			"published_desktop": updated.PublishedDesktop,
+			"end_date":          updated.EndDate,
+			"updated_at":        updated.UpdatedAt,
 		},
 	}
 
