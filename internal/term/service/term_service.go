@@ -2,12 +2,16 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"term-service/internal/term/dto/request"
 	"term-service/internal/term/model"
 	"term-service/internal/term/repository"
+	"term-service/logger"
 	pkg_helpder "term-service/pkg/helper"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type TermService interface {
@@ -82,7 +86,15 @@ func (s *termService) UploadTerms(ctx context.Context, req *request.UploadTermRe
 			// Update existing term
 			existing, err := s.repo.GetByID(ctx, t.ID)
 			if err != nil {
-				return fmt.Errorf("term not found: %s", t.ID)
+				// Log chi tiết ở service
+				logger.WriteLogEx("error", "Get term in UploadTerms failed", map[string]any{
+					"term_id": t.ID,
+					"error":   err.Error(),
+				})
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return fmt.Errorf("term not found: %s", t.ID)
+				}
+				return fmt.Errorf("failed to get term: %w", err)
 			}
 			existing.Title = t.Title
 			existing.Color = t.Color
