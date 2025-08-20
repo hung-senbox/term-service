@@ -8,4 +8,5 @@ type CurrentTermResDTO struct {
 	EndDate      string `json:"end_date"`
 	CreatedAt    string `json:"created_at"`
 	RemaningDate string `json:"remaning_date"`
+	CurrentWeek  int    `json:"current_week"`
 }
