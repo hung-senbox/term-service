@@ -17,7 +17,7 @@ func init() {
 
 	// Gốc log = thư mục cha (/Applications/Senbox/src) + /Log/Term-Service
 	srcDir := filepath.Dir(wd)
-	basePath = filepath.Join(srcDir, "Log", "Term-Service")
+	basePath = filepath.Join(srcDir, "Log")
 }
 
 // parseLogLevel chuyển string → logrus.Level

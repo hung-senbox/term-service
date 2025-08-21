@@ -1,3 +1,6 @@
 # Ignore local configuration
 .vscode
 configs/config.yaml
+
+# ignore log
+cmd/Log
