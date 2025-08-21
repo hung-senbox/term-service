@@ -29,6 +29,7 @@ func (h *TermHandler) RegisterRoutes(r *gin.Engine) {
 	adminGroup := r.Group("/api/v1/admin")
 	adminGroup.Use(middleware.Secured())
 	{
+		// Terms routes
 		termsAdmin := adminGroup.Group("/terms")
 		{
 			termsAdmin.POST("", h.UploadTerm)
@@ -214,7 +215,7 @@ func (h *TermHandler) UploadTerm(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UploadTerms(c.Request.Context(), &req); err != nil {
+	if err := h.service.UploadTerms(c, &req); err != nil {
 		helper.SendError(c, http.StatusInternalServerError, err, err.Error())
 		return
 	}

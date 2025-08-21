@@ -2,6 +2,7 @@ package response
 
 type TermResDTO struct {
 	ID               string `json:"id"`
+	OrganizationID   string `json:"organization_id"`
 	Title            string `json:"title"`
 	Color            string `json:"color"`
 	PublishedMobile  bool   `json:"published_mobile"`

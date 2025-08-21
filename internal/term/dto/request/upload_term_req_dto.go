@@ -7,6 +7,7 @@ type UploadTermReqDTO struct {
 
 type UploadTermItem struct {
 	ID               string `json:"id,omitempty"`
+	OrganizationID   string `json:"organization_id"`
 	Title            string `json:"title"`
 	Color            string `json:"color"`
 	PublishedMobile  bool   `json:"published_mobile"`

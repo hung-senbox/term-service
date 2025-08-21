@@ -8,6 +8,7 @@ import (
 
 type Term struct {
 	ID               primitive.ObjectID `bson:"_id,omitempty"`
+	OrganizationID   string             `bson:"organization_id"`
 	Title            string             `bson:"title"`
 	Color            string             `bson:"color"`
 	PublishedMobile  bool               `bson:"published_mobile"`

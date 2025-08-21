@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"time"
 
 	// "os"
 
@@ -12,6 +14,8 @@ import (
 	"term-service/pkg/router"
 
 	"term-service/pkg/zap"
+
+	consulapi "github.com/hashicorp/consul/api"
 )
 
 func main() {
@@ -34,8 +38,12 @@ func main() {
 
 	//consul
 	consulConn := consul.NewConsulConn(logger, cfg)
-	consulConn.Connect()
+	consulClient := consulConn.Connect()
 	defer consulConn.Deregister()
+
+	if err := waitPassing(consulClient, "go-main-service", 60*time.Second); err != nil {
+		logger.Fatalf("Dependency not ready: %v", err)
+	}
 
 	//db
 	db.ConnectMongoDB()
@@ -45,4 +53,16 @@ func main() {
 	if err := r.Run(":" + port); err != nil {
 		log.Fatal("Failed to run server:", err)
 	}
+}
+
+func waitPassing(cli *consulapi.Client, name string, timeout time.Duration) error {
+	dl := time.Now().Add(timeout)
+	for time.Now().Before(dl) {
+		entries, _, err := cli.Health().Service(name, "", true, nil)
+		if err == nil && len(entries) > 0 {
+			return nil
+		}
+		time.Sleep(2 * time.Second)
+	}
+	return fmt.Errorf("%s not ready in consul", name)
 }

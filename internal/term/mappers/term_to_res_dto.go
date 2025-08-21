@@ -10,6 +10,7 @@ import (
 func MapTermToResDTO(term *model.Term) response.TermResDTO {
 	return response.TermResDTO{
 		ID:               term.ID.Hex(),
+		OrganizationID:   term.OrganizationID,
 		Title:            term.Title,
 		Color:            term.Color,
 		PublishedMobile:  term.PublishedMobile,

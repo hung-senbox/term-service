@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"term-service/internal/gateway"
 	"term-service/internal/term/dto/request"
 	"term-service/internal/term/model"
 	"term-service/internal/term/repository"
@@ -11,6 +12,7 @@ import (
 	pkg_helpder "term-service/pkg/helper"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -21,15 +23,19 @@ type TermService interface {
 	DeleteTerm(ctx context.Context, id string) error
 	ListTerms(ctx context.Context) ([]*model.Term, error)
 	GetCurrentTerm(ctx context.Context) (*model.Term, error)
-	UploadTerms(ctx context.Context, req *request.UploadTermReqDTO) error
+	UploadTerms(ctx *gin.Context, req *request.UploadTermReqDTO) error
 }
 
 type termService struct {
-	repo repository.TermRepository
+	repo        repository.TermRepository
+	userGateway gateway.UserGateway
 }
 
-func NewTermService(repo repository.TermRepository) TermService {
-	return &termService{repo: repo}
+func NewTermService(repo repository.TermRepository, userGateway gateway.UserGateway) TermService {
+	return &termService{
+		repo:        repo,
+		userGateway: userGateway,
+	}
 }
 
 func (s *termService) CreateTerm(ctx context.Context, term *model.Term) (*model.Term, error) {
@@ -56,7 +62,25 @@ func (s *termService) GetCurrentTerm(ctx context.Context) (*model.Term, error) {
 	return s.repo.GetCurrentTerm(ctx)
 }
 
-func (s *termService) UploadTerms(ctx context.Context, req *request.UploadTermReqDTO) error {
+func (s *termService) UploadTerms(ctx *gin.Context, req *request.UploadTermReqDTO) error {
+	// get organzation admin from user context
+	currentUser, err := s.userGateway.GetCurrentUser(ctx)
+	if err != nil {
+		logger.WriteLogEx("error", "Get curent user failed", map[string]any{
+			"error": err.Error(),
+		})
+		return fmt.Errorf("get current user info faild")
+	}
+
+	// check is super admin & check org admin
+	if currentUser.IsSuperAdmin || currentUser.OrganizationAdmin.ID == "" {
+		logger.WriteLogEx("warn", "Access denied for super admin", map[string]any{
+			"user_id": currentUser.ID,
+		})
+		return fmt.Errorf("access denied: super admin cannot perform this action")
+	}
+	organizationAdminID := currentUser.OrganizationAdmin.ID
+
 	// 1. Delete terms if any IDs provided
 	if len(req.DeleteTermIds) > 0 {
 		for _, id := range req.DeleteTermIds {
@@ -110,6 +134,7 @@ func (s *termService) UploadTerms(ctx context.Context, req *request.UploadTermRe
 		} else {
 			// Create new term
 			newTerm := &model.Term{
+				OrganizationID:   organizationAdminID,
 				Title:            t.Title,
 				Color:            t.Color,
 				PublishedMobile:  t.PublishedMobile,

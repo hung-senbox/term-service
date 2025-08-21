@@ -45,7 +45,6 @@ func Secured() gin.HandlerFunc {
 				context.Set(constants.UserRoles, userRoles)
 			}
 		}
-
 		context.Set(constants.Token, tokenString)
 		context.Next()
 	}
