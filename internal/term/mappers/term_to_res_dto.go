@@ -15,6 +15,8 @@ func MapTermToResDTO(term *model.Term) response.TermResDTO {
 		Color:            term.Color,
 		PublishedMobile:  term.PublishedMobile,
 		PublishedDesktop: term.PublishedDesktop,
+		PublishedTeacher: term.PublishedTeacher,
+		PublishedParent:  term.PublishedParent,
 		StartDate:        helper.FormatDate(term.StartDate),
 		EndDate:          helper.FormatDate(term.EndDate),
 		CreatedAt:        helper.FormatDate(term.CreatedAt),

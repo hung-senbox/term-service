@@ -1,12 +1,12 @@
 package gateway
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	gatewaydto "term-service/internal/term/dto/gateway_dto"
+	"term-service/internal/gateway/dto"
 	"term-service/pkg/constants"
 
-	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/consul/api"
 )
 
@@ -17,8 +17,8 @@ type User struct {
 }
 
 type UserGateway interface {
-	GetAuthorInfo(ctx *gin.Context, userID string) (*User, error)
-	GetCurrentUser(ctx *gin.Context) (*gatewaydto.CurrentUser, error)
+	GetAuthorInfo(ctx context.Context, userID string) (*User, error)
+	GetCurrentUser(ctx context.Context) (*dto.CurrentUser, error)
 }
 
 type userGatewayImpl struct {
@@ -34,7 +34,7 @@ func NewUserGateway(serviceName string, consulClient *api.Client) UserGateway {
 }
 
 // GetAuthorInfo lấy thông tin user từ service user
-func (g *userGatewayImpl) GetAuthorInfo(ctx *gin.Context, userID string) (*User, error) {
+func (g *userGatewayImpl) GetAuthorInfo(ctx context.Context, userID string) (*User, error) {
 	token, ok := ctx.Value("token").(string) // hoặc dùng constants.TokenKey
 	if !ok || token == "" {
 		return nil, fmt.Errorf("token not exist context")
@@ -59,12 +59,11 @@ func (g *userGatewayImpl) GetAuthorInfo(ctx *gin.Context, userID string) (*User,
 }
 
 // GetCurrentUser
-func (g *userGatewayImpl) GetCurrentUser(ctx *gin.Context) (*gatewaydto.CurrentUser, error) {
-	tokenValue, exists := ctx.Get(constants.Token)
-	if !exists {
-		return nil, fmt.Errorf("token not exist in gin context")
+func (g *userGatewayImpl) GetCurrentUser(ctx context.Context) (*dto.CurrentUser, error) {
+	token, ok := ctx.Value(constants.Token).(string)
+	if !ok {
+		return nil, fmt.Errorf("token not found in context")
 	}
-	token := tokenValue.(string)
 
 	client, err := NewGatewayClient(g.serviceName, token, g.consul, nil)
 	if err != nil {
@@ -77,7 +76,7 @@ func (g *userGatewayImpl) GetCurrentUser(ctx *gin.Context) (*gatewaydto.CurrentU
 	}
 
 	// Unmarshal response theo format Gateway
-	var gwResp gatewaydto.APIGateWayResponse[gatewaydto.CurrentUser]
+	var gwResp dto.APIGateWayResponse[dto.CurrentUser]
 	if err := json.Unmarshal(resp, &gwResp); err != nil {
 		return nil, fmt.Errorf("unmarshal response fail: %w", err)
 	}

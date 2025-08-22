@@ -13,6 +13,8 @@ type Term struct {
 	Color            string             `bson:"color"`
 	PublishedMobile  bool               `bson:"published_mobile"`
 	PublishedDesktop bool               `bson:"published_desktop"`
+	PublishedTeacher bool               `bson:"published_teacher"`
+	PublishedParent  bool               `bson:"published_parent"`
 	StartDate        time.Time          `bson:"start_date"`
 	EndDate          time.Time          `bson:"end_date"`
 	CreatedAt        time.Time          `bson:"created_at"`

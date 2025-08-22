@@ -4,3 +4,6 @@ configs/config.yaml
 
 # ignore log
 cmd/Log
+
+# ignore debug
+__debug_bin*

@@ -12,7 +12,6 @@ import (
 	pkg_helpder "term-service/pkg/helper"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -23,7 +22,7 @@ type TermService interface {
 	DeleteTerm(ctx context.Context, id string) error
 	ListTerms(ctx context.Context) ([]*model.Term, error)
 	GetCurrentTerm(ctx context.Context) (*model.Term, error)
-	UploadTerms(ctx *gin.Context, req *request.UploadTermReqDTO) error
+	UploadTerms(ctx context.Context, req *request.UploadTermReqDTO) error
 }
 
 type termService struct {
@@ -62,7 +61,7 @@ func (s *termService) GetCurrentTerm(ctx context.Context) (*model.Term, error) {
 	return s.repo.GetCurrentTerm(ctx)
 }
 
-func (s *termService) UploadTerms(ctx *gin.Context, req *request.UploadTermReqDTO) error {
+func (s *termService) UploadTerms(ctx context.Context, req *request.UploadTermReqDTO) error {
 	// get organzation admin from user context
 	currentUser, err := s.userGateway.GetCurrentUser(ctx)
 	if err != nil {
@@ -124,6 +123,8 @@ func (s *termService) UploadTerms(ctx *gin.Context, req *request.UploadTermReqDT
 			existing.Color = t.Color
 			existing.PublishedMobile = t.PublishedMobile
 			existing.PublishedDesktop = t.PublishedDesktop
+			existing.PublishedTeacher = t.PublishedTeacher
+			existing.PublishedParent = t.PublishedParent
 			existing.StartDate = startDate
 			existing.EndDate = endDate
 			existing.UpdatedAt = time.Now()

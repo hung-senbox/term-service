@@ -1,4 +1,4 @@
-package gatewaydto
+package dto
 
 import "time"
 
