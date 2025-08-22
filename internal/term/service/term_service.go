@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"term-service/internal/gateway"
 	"term-service/internal/term/dto/request"
+	"term-service/internal/term/dto/response"
+	"term-service/internal/term/mappers"
 	"term-service/internal/term/model"
 	"term-service/internal/term/repository"
 	"term-service/logger"
@@ -20,20 +22,23 @@ type TermService interface {
 	GetTermByID(ctx context.Context, id string) (*model.Term, error)
 	UpdateTerm(ctx context.Context, id string, term *model.Term) error
 	DeleteTerm(ctx context.Context, id string) error
-	ListTerms(ctx context.Context) ([]*model.Term, error)
+	ListTerms(ctx context.Context) (*response.ListTermsOrgResDTO, error)
 	GetCurrentTerm(ctx context.Context) (*model.Term, error)
 	UploadTerms(ctx context.Context, req *request.UploadTermReqDTO) error
+	GetTermsByOrgID(ctx context.Context, orgID string) (*response.ListTermsResDTO, error)
 }
 
 type termService struct {
 	repo        repository.TermRepository
 	userGateway gateway.UserGateway
+	orgGateway  gateway.OrganizationGateway
 }
 
-func NewTermService(repo repository.TermRepository, userGateway gateway.UserGateway) TermService {
+func NewTermService(repo repository.TermRepository, userGateway gateway.UserGateway, orgGateway gateway.OrganizationGateway) TermService {
 	return &termService{
 		repo:        repo,
 		userGateway: userGateway,
+		orgGateway:  orgGateway,
 	}
 }
 
@@ -53,8 +58,62 @@ func (s *termService) DeleteTerm(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *termService) ListTerms(ctx context.Context) ([]*model.Term, error) {
-	return s.repo.GetAll(ctx)
+func (s *termService) ListTerms(ctx context.Context) (*response.ListTermsOrgResDTO, error) {
+	currentUser, err := s.userGateway.GetCurrentUser(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get current user info failed: %w", err)
+	}
+
+	var terms []*model.Term
+	var orgIDs []string
+
+	if currentUser.IsSuperAdmin {
+		terms, err = s.repo.GetAll(ctx)
+		if err != nil {
+			return nil, err
+		}
+		// gom tất cả orgID từ terms
+		orgIDMap := map[string]struct{}{}
+		for _, t := range terms {
+			orgIDMap[t.OrganizationID] = struct{}{}
+		}
+		for id := range orgIDMap {
+			orgIDs = append(orgIDs, id)
+		}
+	} else if currentUser.OrganizationAdmin.ID != "" {
+		orgIDs = []string{currentUser.OrganizationAdmin.ID}
+		terms, err = s.repo.GetAllByOrgID(ctx, currentUser.OrganizationAdmin.ID)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, fmt.Errorf("access denied: user is not an organization admin")
+	}
+
+	// group terms by orgID
+	termsByOrg := map[string][]*model.Term{}
+	for _, t := range terms {
+		termsByOrg[t.OrganizationID] = append(termsByOrg[t.OrganizationID], t)
+	}
+
+	// build response
+	var result []response.TemsByOrgRes
+	for _, orgID := range orgIDs {
+		orgInfo, err := s.orgGateway.GetOrganizationInfo(ctx, orgID)
+		if err != nil {
+			return nil, fmt.Errorf("get organization info failed: %w", err)
+		}
+
+		result = append(result, response.TemsByOrgRes{
+			OrganizationName: orgInfo.OrganizationName, // chỉ lấy tên
+			Terms:            mappers.MapTermListToResDTO(termsByOrg[orgID]),
+		})
+
+	}
+
+	return &response.ListTermsOrgResDTO{
+		TermsOrg: result,
+	}, nil
 }
 
 func (s *termService) GetCurrentTerm(ctx context.Context) (*model.Term, error) {
@@ -65,9 +124,6 @@ func (s *termService) UploadTerms(ctx context.Context, req *request.UploadTermRe
 	// get organzation admin from user context
 	currentUser, err := s.userGateway.GetCurrentUser(ctx)
 	if err != nil {
-		logger.WriteLogEx("error", "Get curent user failed", map[string]any{
-			"error": err.Error(),
-		})
 		return fmt.Errorf("get current user info faild")
 	}
 
@@ -152,4 +208,21 @@ func (s *termService) UploadTerms(ctx context.Context, req *request.UploadTermRe
 	}
 
 	return nil
+}
+
+func (s *termService) GetTermsByOrgID(ctx context.Context, orgID string) (*response.ListTermsResDTO, error) {
+	terms, err := s.repo.GetAllByOrgID(ctx, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("get terms by orgID failed: %w", err)
+	}
+
+	if len(terms) == 0 {
+		return &response.ListTermsResDTO{
+			Terms: make([]response.TermResDTO, 0),
+		}, nil
+	}
+
+	return &response.ListTermsResDTO{
+		Terms: mappers.MapTermListToResDTO(terms),
+	}, nil
 }

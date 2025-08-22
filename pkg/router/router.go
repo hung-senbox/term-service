@@ -16,12 +16,13 @@ func SetupRouter(mongoCollection *mongo.Collection) *gin.Engine {
 	// consul
 	consulClient, _ := api.NewClient(api.DefaultConfig())
 
-	// Tạo UserGateway
+	// Gateway setup
 	userGateway := gateway.NewUserGateway("go-main-service", consulClient)
+	orgGateway := gateway.NewOrganizationGateway("go-main-service", consulClient)
 
 	// Setup dependency injection
 	repo := repository.NewTermRepository(mongoCollection)
-	svc := service.NewTermService(repo, userGateway)
+	svc := service.NewTermService(repo, userGateway, orgGateway)
 	h := handler.NewHandler(svc)
 
 	// Register routes

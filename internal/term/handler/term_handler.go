@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -8,7 +9,6 @@ import (
 
 	"term-service/helper"
 	"term-service/internal/term/dto/request"
-	"term-service/internal/term/dto/response"
 	"term-service/internal/term/mappers"
 	"term-service/internal/term/middleware"
 	"term-service/internal/term/model"
@@ -29,16 +29,18 @@ func (h *TermHandler) RegisterRoutes(r *gin.Engine) {
 	adminGroup := r.Group("/api/v1/admin")
 	adminGroup.Use(middleware.Secured())
 	{
-		// Terms routes
 		termsAdmin := adminGroup.Group("/terms")
 		{
 			termsAdmin.POST("", h.UploadTerm)
 			termsAdmin.GET("", h.ListTerms)
-			termsAdmin.GET("/:id", h.GetTermByID)
-			termsAdmin.PUT("/:id", h.UpdateTerm)
-			termsAdmin.DELETE("/:id", h.DeleteTerm)
-			termsAdmin.GET("/current", h.GetCurrentTerm)
 		}
+	}
+
+	// Organization routes
+	orgGroup := r.Group("/api/v1/organization")
+	orgGroup.Use(middleware.Secured())
+	{
+		orgGroup.GET("/:organization_id/terms", h.GetTermsByOrgID)
 	}
 
 	// User routes
@@ -97,13 +99,7 @@ func (h *TermHandler) ListTerms(c *gin.Context) {
 		return
 	}
 
-	res := make([]response.TermResDTO, 0)
-
-	for _, t := range terms {
-		res = append(res, mappers.MapTermToResDTO(t))
-	}
-
-	helper.SendSuccess(c, http.StatusOK, "Success", res)
+	helper.SendSuccess(c, http.StatusOK, "Success", terms)
 }
 
 func (h *TermHandler) GetTermByID(c *gin.Context) {
@@ -221,4 +217,20 @@ func (h *TermHandler) UploadTerm(c *gin.Context) {
 	}
 
 	helper.SendSuccess(c, http.StatusOK, "Upload term successful", nil)
+}
+
+func (h *TermHandler) GetTermsByOrgID(c *gin.Context) {
+	orgID := c.Param("organization_id")
+	if orgID == "" {
+		helper.SendError(c, http.StatusBadRequest, fmt.Errorf("missing organization_id"), helper.ErrInvalidOperation)
+		return
+	}
+
+	terms, err := h.service.GetTermsByOrgID(c.Request.Context(), orgID)
+	if err != nil {
+		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInvalidOperation)
+		return
+	}
+
+	helper.SendSuccess(c, http.StatusOK, "Success", terms)
 }

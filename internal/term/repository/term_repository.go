@@ -18,6 +18,7 @@ type TermRepository interface {
 	Delete(ctx context.Context, id string) error
 	GetAll(ctx context.Context) ([]*model.Term, error)
 	GetCurrentTerm(ctx context.Context) (*model.Term, error)
+	GetAllByOrgID(ctx context.Context, orgID string) ([]*model.Term, error)
 }
 
 type termRepository struct {
@@ -143,4 +144,23 @@ func (r *termRepository) GetCurrentTerm(ctx context.Context) (*model.Term, error
 	}
 
 	return &term, nil
+}
+
+func (r *termRepository) GetAllByOrgID(ctx context.Context, orgID string) ([]*model.Term, error) {
+	filter := bson.M{
+		"organization_id": orgID,
+	}
+
+	cur, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	var terms []*model.Term
+	if err := cur.All(ctx, &terms); err != nil {
+		return nil, err
+	}
+
+	return terms, nil
 }
