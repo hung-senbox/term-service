@@ -23,7 +23,7 @@ func MapTermToResDTO(term *model.Term) response.TermResDTO {
 }
 
 func MapTermListToResDTO(terms []*model.Term) []response.TermResDTO {
-	var result []response.TermResDTO
+	result := make([]response.TermResDTO, 0, len(terms)) // slice rỗng, không phải nil
 	for _, term := range terms {
 		result = append(result, MapTermToResDTO(term))
 	}
