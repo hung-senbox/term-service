@@ -12,10 +12,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SetupRouter(mongoCollection *mongo.Collection) *gin.Engine {
+func SetupRouter(mongoCollection *mongo.Collection, consulClient *api.Client) *gin.Engine {
 	r := gin.Default()
 	// consul
-	consulClient, _ := api.NewClient(api.DefaultConfig())
+	//consulClient, _ := api.NewClient(api.DefaultConfig())
 
 	// Gateway setup
 	userGateway := gateway.NewUserGateway("go-main-service", consulClient)
