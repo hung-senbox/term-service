@@ -24,7 +24,7 @@ type TermService interface {
 	DeleteTerm(ctx context.Context, id string) error
 	ListTerms(ctx context.Context) (*response.ListTermsOrgResDTO, error)
 	GetCurrentTerm(ctx context.Context) (*model.Term, error)
-	UploadTerms(ctx context.Context, req *request.UploadTermReqDTO) error
+	UploadTerms(ctx context.Context, req []request.UploadTermItem) error
 	GetTermsByOrgID(ctx context.Context, orgID string) (*response.ListTermsResDTO, error)
 }
 
@@ -120,8 +120,8 @@ func (s *termService) GetCurrentTerm(ctx context.Context) (*model.Term, error) {
 	return s.repo.GetCurrentTerm(ctx)
 }
 
-func (s *termService) UploadTerms(ctx context.Context, req *request.UploadTermReqDTO) error {
-	// get organzation admin from user context
+func (s *termService) UploadTerms(ctx context.Context, req []request.UploadTermItem) error {
+	// get organization admin from user context
 	currentUser, err := s.userGateway.GetCurrentUser(ctx)
 	if err != nil {
 		return fmt.Errorf("get current user info failed")
@@ -136,17 +136,8 @@ func (s *termService) UploadTerms(ctx context.Context, req *request.UploadTermRe
 	}
 	organizationAdminID := currentUser.OrganizationAdmin.ID
 
-	// 1. Delete terms if any IDs provided
-	if len(req.DeleteTermIds) > 0 {
-		for _, id := range req.DeleteTermIds {
-			if err := s.repo.Delete(ctx, id); err != nil {
-				return fmt.Errorf("failed to delete term %s: %w", id, err)
-			}
-		}
-	}
-
-	// 2. Upsert terms
-	for _, t := range req.Terms {
+	// Upsert terms (không cần delete nữa)
+	for _, t := range req {
 		startDate, err := time.Parse("2006-01-02", t.StartDate)
 		if err != nil {
 			return fmt.Errorf("invalid start_date for term %s: %w", t.Title, err)
@@ -165,7 +156,6 @@ func (s *termService) UploadTerms(ctx context.Context, req *request.UploadTermRe
 			// Update existing term
 			existing, err := s.repo.GetByID(ctx, t.ID)
 			if err != nil {
-				// Log chi tiết ở service
 				logger.WriteLogEx("error", "Get term in UploadTerms failed", map[string]any{
 					"term_id": t.ID,
 					"error":   err.Error(),
@@ -175,6 +165,7 @@ func (s *termService) UploadTerms(ctx context.Context, req *request.UploadTermRe
 				}
 				return fmt.Errorf("failed to get term: %w", err)
 			}
+
 			existing.Title = t.Title
 			existing.Color = t.Color
 			existing.PublishedMobile = t.PublishedMobile
@@ -196,11 +187,14 @@ func (s *termService) UploadTerms(ctx context.Context, req *request.UploadTermRe
 				Color:            t.Color,
 				PublishedMobile:  t.PublishedMobile,
 				PublishedDesktop: t.PublishedDesktop,
+				PublishedTeacher: t.PublishedTeacher,
+				PublishedParent:  t.PublishedParent,
 				StartDate:        startDate,
 				EndDate:          endDate,
 				CreatedAt:        time.Now(),
 				UpdatedAt:        time.Now(),
 			}
+
 			if _, err := s.repo.Create(ctx, newTerm); err != nil {
 				return fmt.Errorf("failed to create term %s: %w", t.Title, err)
 			}

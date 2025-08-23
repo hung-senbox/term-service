@@ -1,13 +1,7 @@
 package request
 
-type UploadTermReqDTO struct {
-	DeleteTermIds []string         `json:"delete_term_ids"`
-	Terms         []UploadTermItem `json:"terms"`
-}
-
 type UploadTermItem struct {
 	ID               string `json:"id,omitempty"`
-	OrganizationID   string `json:"organization_id"`
 	Title            string `json:"title"`
 	Color            string `json:"color"`
 	PublishedMobile  bool   `json:"published_mobile"`

@@ -174,13 +174,13 @@ func (h *TermHandler) GetCurrentTerm(c *gin.Context) {
 }
 
 func (h *TermHandler) UploadTerm(c *gin.Context) {
-	var req request.UploadTermReqDTO
-	if err := c.ShouldBindJSON(&req); err != nil {
+	var terms []request.UploadTermItem
+	if err := c.ShouldBindJSON(&terms); err != nil {
 		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
 		return
 	}
 
-	if err := h.service.UploadTerms(c, &req); err != nil {
+	if err := h.service.UploadTerms(c, terms); err != nil {
 		helper.SendError(c, http.StatusInternalServerError, err, err.Error())
 		return
 	}
