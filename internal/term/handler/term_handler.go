@@ -185,7 +185,7 @@ func (h *TermHandler) UploadTerm(c *gin.Context) {
 		return
 	}
 
-	helper.SendSuccess(c, http.StatusOK, "Upload term successful", nil)
+	helper.SendSuccess(c, http.StatusOK, "Upload terms successfully", nil)
 }
 
 func (h *TermHandler) GetTermsByOrgID(c *gin.Context) {

@@ -124,7 +124,7 @@ func (s *termService) UploadTerms(ctx context.Context, req *request.UploadTermRe
 	// get organzation admin from user context
 	currentUser, err := s.userGateway.GetCurrentUser(ctx)
 	if err != nil {
-		return fmt.Errorf("get current user info faild")
+		return fmt.Errorf("get current user info failed")
 	}
 
 	// check is super admin & check org admin
