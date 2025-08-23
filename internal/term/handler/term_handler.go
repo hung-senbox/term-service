@@ -10,7 +10,6 @@ import (
 	"term-service/helper"
 	"term-service/internal/term/dto/request"
 	"term-service/internal/term/mappers"
-	"term-service/internal/term/middleware"
 	"term-service/internal/term/model"
 	"term-service/internal/term/service"
 	pkg_helpder "term-service/pkg/helper"
@@ -22,36 +21,6 @@ type TermHandler struct {
 
 func NewHandler(s service.TermService) *TermHandler {
 	return &TermHandler{service: s}
-}
-
-func (h *TermHandler) RegisterRoutes(r *gin.Engine) {
-	// Admin routes
-	adminGroup := r.Group("/api/v1/admin")
-	adminGroup.Use(middleware.Secured())
-	{
-		termsAdmin := adminGroup.Group("/terms")
-		{
-			termsAdmin.POST("", h.UploadTerm)
-			termsAdmin.GET("", h.ListTerms)
-		}
-	}
-
-	// Organization routes
-	orgGroup := r.Group("/api/v1/organization")
-	orgGroup.Use(middleware.Secured())
-	{
-		orgGroup.GET("/:organization_id/terms", h.GetTermsByOrgID)
-	}
-
-	// User routes
-	userGroup := r.Group("/api/v1")
-	userGroup.Use(middleware.Secured())
-	{
-		termsUser := userGroup.Group("/terms")
-		{
-			termsUser.GET("/current", h.GetCurrentTerm)
-		}
-	}
 }
 
 func (h *TermHandler) CreateTerm(c *gin.Context) {

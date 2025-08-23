@@ -4,6 +4,7 @@ import (
 	"term-service/internal/gateway"
 	"term-service/internal/term/handler"
 	"term-service/internal/term/repository"
+	"term-service/internal/term/route"
 	"term-service/internal/term/service"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +27,7 @@ func SetupRouter(mongoCollection *mongo.Collection) *gin.Engine {
 	h := handler.NewHandler(svc)
 
 	// Register routes
-	h.RegisterRoutes(r)
+	route.RegisterTermRoutes(r, h)
 
 	return r
 }
