@@ -1,17 +1,12 @@
 package middleware
 
 import (
-	// "net/http"
-	// "strings"
-	// "term-info-service/pkg/constants"
-
 	"context"
 	"net/http"
 	"strings"
 	"term-service/pkg/constants"
 
 	"github.com/gin-gonic/gin"
-	//"github.com/golang-jwt/jwt"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -34,21 +29,32 @@ func Secured() gin.HandlerFunc {
 		token, _, _ := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			if userId, ok := claims[constants.UserID].(string); ok {
-				c.Set(constants.UserID, userId)
+			// --- UserID ---
+			if userId, ok := claims[constants.UserID.String()].(string); ok {
+				// gin context → key phải là string
+				c.Set(constants.UserID.String(), userId)
+				// request context → key là ContextKey
+				ctx := context.WithValue(c.Request.Context(), constants.UserID, userId)
+				c.Request = c.Request.WithContext(ctx)
 			}
 
-			if userName, ok := claims[constants.UserName].(string); ok {
-				c.Set(constants.UserName, userName)
+			// --- UserName ---
+			if userName, ok := claims[constants.UserName.String()].(string); ok {
+				c.Set(constants.UserName.String(), userName)
+				ctx := context.WithValue(c.Request.Context(), constants.UserName, userName)
+				c.Request = c.Request.WithContext(ctx)
 			}
 
-			if userRoles, ok := claims[constants.UserRoles].(string); ok {
-				c.Set(constants.UserRoles, userRoles)
+			// --- Roles ---
+			if userRoles, ok := claims[constants.UserRoles.String()].(string); ok {
+				c.Set(constants.UserRoles.String(), userRoles)
+				ctx := context.WithValue(c.Request.Context(), constants.UserRoles, userRoles)
+				c.Request = c.Request.WithContext(ctx)
 			}
 		}
-		c.Set(constants.Token, tokenString)
 
-		// inject vào context chuẩn
+		// Token
+		c.Set(constants.Token.String(), tokenString)
 		ctx := context.WithValue(c.Request.Context(), constants.Token, tokenString)
 		c.Request = c.Request.WithContext(ctx)
 
@@ -58,7 +64,7 @@ func Secured() gin.HandlerFunc {
 
 func RequireAdmin() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		rolesAny, exists := c.Get(constants.UserRoles)
+		rolesAny, exists := c.Get(constants.UserRoles.String())
 		if !exists {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Roles not found"})
 			return
@@ -70,7 +76,7 @@ func RequireAdmin() gin.HandlerFunc {
 			return
 		}
 
-		// Chuyển chuỗi "Admin, Teacher" thành slice
+		// ví dụ roles: "SuperAdmin, Teacher"
 		roles := strings.Split(rolesStr, ",")
 		isAdmin := false
 		for _, role := range roles {

@@ -61,7 +61,6 @@ const (
 	Unmarshal       = "unmarshal"
 	Uuid            = "uuid"
 	Cookie          = "cookie"
-	Token           = "token"
 	Bcrypt          = "bcrypt"
 	SQLState        = "sqlstate"
 
@@ -104,18 +103,17 @@ const (
 	NumberOfUses     = "number_of_uses"
 	MinimumUsageTime = "minimum_usage_time"
 	MaximumUsageTime = "maximum_usage_time"
-
-	UserID    = "user_id"
-	UserName  = "user_name"
-	UserRoles = "roles"
 )
 
-type contextKey string
+type ContextKey string
 
-func (c contextKey) String() string {
+func (c ContextKey) String() string {
 	return string(c)
 }
 
 var (
-	TokenKey = contextKey("token")
+	Token     ContextKey = "token"
+	UserID    ContextKey = "user_id"
+	UserName  ContextKey = "user_name"
+	UserRoles ContextKey = "roles"
 )

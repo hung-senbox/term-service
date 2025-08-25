@@ -26,6 +26,7 @@ type TermService interface {
 	GetCurrentTerm(ctx context.Context) (*model.Term, error)
 	UploadTerms(ctx context.Context, req []request.UploadTermItem) error
 	GetTermsByOrgID(ctx context.Context, orgID string) (*response.ListTermsResDTO, error)
+	GetTerms4Student(ctx context.Context, studentID string) (*response.ListTermsResDTO, error)
 }
 
 type termService struct {
@@ -206,6 +207,30 @@ func (s *termService) UploadTerms(ctx context.Context, req []request.UploadTermI
 
 func (s *termService) GetTermsByOrgID(ctx context.Context, orgID string) (*response.ListTermsResDTO, error) {
 	terms, err := s.repo.GetAllByOrgID(ctx, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("get terms by orgID failed: %w", err)
+	}
+
+	if len(terms) == 0 {
+		return &response.ListTermsResDTO{
+			Terms: make([]response.TermResDTO, 0),
+		}, nil
+	}
+
+	return &response.ListTermsResDTO{
+		Terms: mappers.MapTermListToResDTO(terms),
+	}, nil
+}
+
+func (s *termService) GetTerms4Student(ctx context.Context, studentID string) (*response.ListTermsResDTO, error) {
+	// get student info
+	student, err := s.userGateway.GetStudentInfo(ctx, studentID)
+	if err != nil {
+		return nil, fmt.Errorf("get student info failed: %w", err)
+	}
+
+	// get terms by orgID
+	terms, err := s.repo.GetAllByOrgID(ctx, student.OrganizationID)
 	if err != nil {
 		return nil, fmt.Errorf("get terms by orgID failed: %w", err)
 	}
