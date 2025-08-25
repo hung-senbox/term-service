@@ -104,11 +104,6 @@ func (s *termService) ListTerms(ctx context.Context) (*response.ListTermsOrgResD
 			return nil, fmt.Errorf("get organization info failed: %w", err)
 		}
 
-		terms := termsByOrg[orgID]
-		if terms == nil {
-			terms = []*model.Term{}
-		}
-
 		result = append(result, response.TemsByOrgRes{
 			OrganizationName: orgInfo.OrganizationName, // chỉ lấy tên
 			Terms:            mappers.MapTermListToResDTO(terms),
