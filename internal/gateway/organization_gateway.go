@@ -12,6 +12,7 @@ import (
 
 type OrganizationGateway interface {
 	GetOrganizationInfo(ctx context.Context, organizationID string) (*dto.OrganizationInfo, error)
+	GetAllOrg(ctx context.Context) ([]dto.OrganizationInfo, error)
 }
 
 type organizationGatewayImpl struct {
@@ -54,4 +55,33 @@ func (g *organizationGatewayImpl) GetOrganizationInfo(ctx context.Context, organ
 	}
 
 	return &gwResp.Data, nil
+}
+
+func (g *organizationGatewayImpl) GetAllOrg(ctx context.Context) ([]dto.OrganizationInfo, error) {
+	token, ok := ctx.Value(constants.Token).(string)
+	if !ok {
+		return nil, fmt.Errorf("token not found in context")
+	}
+
+	client, err := NewGatewayClient(g.serviceName, token, g.consul, nil)
+	if err != nil {
+		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
+	}
+
+	resp, err := client.Call("GET", "/v1/gateway/organizations", nil)
+	if err != nil {
+		return nil, fmt.Errorf("call API get all organization fail: %w", err)
+	}
+
+	// Unmarshal response theo format Gateway
+	var gwResp dto.APIGateWayResponse[[]dto.OrganizationInfo]
+	if err := json.Unmarshal(resp, &gwResp); err != nil {
+		return nil, fmt.Errorf("unmarshal response fail: %w", err)
+	}
+
+	if gwResp.StatusCode != 200 {
+		return nil, fmt.Errorf("gateway error: %s", gwResp.Message)
+	}
+
+	return gwResp.Data, nil
 }

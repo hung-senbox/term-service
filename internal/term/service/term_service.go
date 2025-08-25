@@ -65,51 +65,47 @@ func (s *termService) ListTerms(ctx context.Context) (*response.ListTermsOrgResD
 		return nil, fmt.Errorf("get current user info failed: %w", err)
 	}
 
-	var terms []*model.Term
-	var orgIDs []string
+	var result []response.TemsByOrgRes
 
 	if currentUser.IsSuperAdmin {
-		terms, err = s.repo.GetAll(ctx)
+		// Lấy toàn bộ org từ Gateway
+		orgs, err := s.orgGateway.GetAllOrg(ctx)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("get all organizations failed: %w", err)
 		}
-		// gom tất cả orgID từ terms
-		orgIDMap := map[string]struct{}{}
-		for _, t := range terms {
-			orgIDMap[t.OrganizationID] = struct{}{}
+
+		for _, org := range orgs {
+			terms, err := s.repo.GetAllByOrgID(ctx, org.ID)
+			if err != nil {
+				return nil, fmt.Errorf("get terms by orgID %s failed: %w", org.ID, err)
+			}
+
+			result = append(result, response.TemsByOrgRes{
+				OrganizationName: org.OrganizationName,
+				Terms:            mappers.MapTermListToResDTO(terms),
+			})
 		}
-		for id := range orgIDMap {
-			orgIDs = append(orgIDs, id)
-		}
+
 	} else if currentUser.OrganizationAdmin.ID != "" {
-		orgIDs = []string{currentUser.OrganizationAdmin.ID}
-		terms, err = s.repo.GetAllByOrgID(ctx, currentUser.OrganizationAdmin.ID)
+		// User là org admin → chỉ lấy org của mình
+		orgID := currentUser.OrganizationAdmin.ID
+		terms, err := s.repo.GetAllByOrgID(ctx, orgID)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("get terms by orgID %s failed: %w", orgID, err)
 		}
-	} else {
-		return nil, fmt.Errorf("access denied: user is not an organization admin")
-	}
 
-	// group terms by orgID
-	termsByOrg := map[string][]*model.Term{}
-	for _, t := range terms {
-		termsByOrg[t.OrganizationID] = append(termsByOrg[t.OrganizationID], t)
-	}
-
-	// build response
-	var result []response.TemsByOrgRes
-	for _, orgID := range orgIDs {
 		orgInfo, err := s.orgGateway.GetOrganizationInfo(ctx, orgID)
 		if err != nil {
 			return nil, fmt.Errorf("get organization info failed: %w", err)
 		}
 
 		result = append(result, response.TemsByOrgRes{
-			OrganizationName: orgInfo.OrganizationName, // chỉ lấy tên
+			OrganizationName: orgInfo.OrganizationName,
 			Terms:            mappers.MapTermListToResDTO(terms),
 		})
 
+	} else {
+		return nil, fmt.Errorf("access denied: user is not an organization admin")
 	}
 
 	return &response.ListTermsOrgResDTO{
