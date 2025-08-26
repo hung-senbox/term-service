@@ -84,93 +84,21 @@ func (h *TermHandler) GetTermByID(c *gin.Context) {
 	helper.SendSuccess(c, http.StatusOK, "Success", res)
 }
 
-func (h *TermHandler) UpdateTerm(c *gin.Context) {
-	id := c.Param("id")
-
-	var input request.UpdateTermReqDTO
-	if err := c.ShouldBindJSON(&input); err != nil {
-		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
-		return
-	}
-
-	// Fetch existing term
-	existing, err := h.service.GetTermByID(c.Request.Context(), id)
-	if err != nil {
-		helper.SendError(c, http.StatusNotFound, err, helper.ErrNotFount)
-		return
-	}
-
-	// Only update provided fields
-	if input.Title != nil {
-		existing.Title = *input.Title
-	}
-
-	if input.StartDate != nil {
-		startDate, err := time.Parse("2006-01-02", *input.StartDate)
-		if err != nil {
-			helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
-			return
-		}
-		existing.StartDate = startDate
-	}
-
-	if input.EndDate != nil {
-		endDate, err := time.Parse("2006-01-02", *input.EndDate)
-		if err != nil {
-			helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
-			return
-		}
-		existing.EndDate = endDate
-	}
-
-	// ✅ Validate date range
-	if !pkg_helpder.ValidateDateRange(existing.StartDate, existing.EndDate) {
-		helper.SendError(c, http.StatusBadRequest, nil, "start_date must be before or equal to end_date")
-		return
-	}
-
-	// ✅ Save updates
-	if err := h.service.UpdateTerm(c.Request.Context(), id, existing); err != nil {
-		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInvalidOperation)
-		return
-	}
-
-	// Fetch updated term
-	updated, err := h.service.GetTermByID(c.Request.Context(), id)
-	if err != nil {
-		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
-		return
-	}
-
-	res := mappers.MapTermToResDTO(updated)
-	helper.SendSuccess(c, http.StatusOK, "Updated successfully", res)
-}
-
-func (h *TermHandler) DeleteTerm(c *gin.Context) {
-	id := c.Param("id")
-
-	if err := h.service.DeleteTerm(c.Request.Context(), id); err != nil {
-		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInvalidOperation)
-		return
-	}
-
-	c.Status(http.StatusNoContent)
-}
-
 func (h *TermHandler) GetCurrentTerm(c *gin.Context) {
-	term, err := h.service.GetCurrentTerm(c.Request.Context())
+
+	organizationID := c.Query("organization_id")
+	// if organizationID == "" {
+	// 	helper.SendError(c, http.StatusBadRequest, fmt.Errorf("missing organization_id in"), helper.ErrInvalidOperation)
+	// 	return
+	// }
+
+	term, err := h.service.GetCurrentTermByOrg(c.Request.Context(), organizationID)
 	if err != nil {
 		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
 		return
 	}
-	if term == nil {
-		helper.SendError(c, http.StatusNotFound, nil, "No current term found")
-		return
-	}
 
-	res := mappers.MapTermToCurrentResDTO(term)
-
-	helper.SendSuccess(c, http.StatusOK, "Success", res)
+	helper.SendSuccess(c, http.StatusOK, "Success", term)
 }
 
 func (h *TermHandler) UploadTerm(c *gin.Context) {

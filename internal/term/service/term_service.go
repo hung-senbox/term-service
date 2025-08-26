@@ -23,10 +23,11 @@ type TermService interface {
 	UpdateTerm(ctx context.Context, id string, term *model.Term) error
 	DeleteTerm(ctx context.Context, id string) error
 	ListTerms(ctx context.Context) (*response.ListTermsOrgResDTO, error)
-	GetCurrentTerm(ctx context.Context) (*model.Term, error)
+	GetCurrentTerm(ctx context.Context) (response.CurrentTermResDTO, error)
 	UploadTerms(ctx context.Context, req []request.UploadTermItem) error
 	GetTermsByOrgID(ctx context.Context, orgID string) (*response.ListTermsResDTO, error)
 	GetTerms4Student(ctx context.Context, studentID string) (*response.ListTermsResDTO, error)
+	GetCurrentTermByOrg(ctx context.Context, organizationID string) (response.CurrentTermResDTO, error)
 }
 
 type termService struct {
@@ -113,8 +114,38 @@ func (s *termService) ListTerms(ctx context.Context) (*response.ListTermsOrgResD
 	}, nil
 }
 
-func (s *termService) GetCurrentTerm(ctx context.Context) (*model.Term, error) {
-	return s.repo.GetCurrentTerm(ctx)
+func (s *termService) GetCurrentTerm(ctx context.Context) (response.CurrentTermResDTO, error) {
+	term, err := s.repo.GetCurrentTerm(ctx)
+	if err != nil {
+		return response.CurrentTermResDTO{}, fmt.Errorf("get current term failed: %w", err)
+	}
+
+	if term == nil {
+		return response.CurrentTermResDTO{}, fmt.Errorf("no current term found")
+	}
+
+	return mappers.MapTermToCurrentResDTO(term), nil
+}
+
+func (s *termService) GetCurrentTermByOrg(ctx context.Context, organizationID string) (response.CurrentTermResDTO, error) {
+	var term *model.Term
+	var err error
+
+	if organizationID == "" {
+		term, err = s.repo.GetCurrentTerm(ctx)
+	} else {
+		term, err = s.repo.GetCurrentTermByOrg(ctx, organizationID)
+	}
+
+	if err != nil {
+		return response.CurrentTermResDTO{}, fmt.Errorf("get current term failed: %w", err)
+	}
+
+	if term == nil {
+		return response.CurrentTermResDTO{}, fmt.Errorf("no current term found")
+	}
+
+	return mappers.MapTermToCurrentResDTO(term), nil
 }
 
 func (s *termService) UploadTerms(ctx context.Context, req []request.UploadTermItem) error {

@@ -19,6 +19,7 @@ type TermRepository interface {
 	GetAll(ctx context.Context) ([]*model.Term, error)
 	GetCurrentTerm(ctx context.Context) (*model.Term, error)
 	GetAllByOrgID(ctx context.Context, orgID string) ([]*model.Term, error)
+	GetCurrentTermByOrg(ctx context.Context, organizationID string) (*model.Term, error)
 }
 
 type termRepository struct {
@@ -132,6 +133,27 @@ func (r *termRepository) GetCurrentTerm(ctx context.Context) (*model.Term, error
 	filter := bson.M{
 		"start_date": bson.M{"$lte": now},
 		"end_date":   bson.M{"$gte": now},
+	}
+
+	var term model.Term
+	err := r.collection.FindOne(ctx, filter).Decode(&term)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil // No current term found, not an error
+		}
+		return nil, err
+	}
+
+	return &term, nil
+}
+
+func (r *termRepository) GetCurrentTermByOrg(ctx context.Context, organizationID string) (*model.Term, error) {
+	now := time.Now()
+
+	filter := bson.M{
+		"organization_id": organizationID,
+		"start_date":      bson.M{"$lte": now},
+		"end_date":        bson.M{"$gte": now},
 	}
 
 	var term model.Term
