@@ -86,3 +86,15 @@ func calculateCurrentWeek(start, end, now time.Time) int {
 	daysPassed := int(nowDate.Sub(startDate).Hours() / 24)
 	return (daysPassed / 7) + 1
 }
+
+func MapTermsByStudentToResDTO(terms []*model.Term) []response.TermsByStudentResDTO {
+	result := make([]response.TermsByStudentResDTO, 0, len(terms))
+	for _, term := range terms {
+		result = append(result, response.TermsByStudentResDTO{
+			ID:    term.ID.Hex(),
+			Title: term.Title,
+			Color: term.Color,
+		})
+	}
+	return result
+}

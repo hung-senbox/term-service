@@ -12,3 +12,9 @@ type TermResDTO struct {
 	EndDate          string `json:"end_date"`
 	CreatedAt        string `json:"created_at"`
 }
+
+type TermsByStudentResDTO struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+	Color string `json:"color"`
+}

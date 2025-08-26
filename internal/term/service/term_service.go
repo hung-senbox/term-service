@@ -26,7 +26,7 @@ type TermService interface {
 	GetCurrentTerm(ctx context.Context) (response.CurrentTermResDTO, error)
 	UploadTerms(ctx context.Context, req []request.UploadTermItem) error
 	GetTermsByOrgID(ctx context.Context, orgID string) (*response.ListTermsResDTO, error)
-	GetTerms4Student(ctx context.Context, studentID string) (*response.ListTermsResDTO, error)
+	GetTermsByStudent(ctx context.Context, studentID string) ([]response.TermsByStudentResDTO, error)
 	GetCurrentTermByOrg(ctx context.Context, organizationID string) (response.CurrentTermResDTO, error)
 }
 
@@ -249,7 +249,7 @@ func (s *termService) GetTermsByOrgID(ctx context.Context, orgID string) (*respo
 	}, nil
 }
 
-func (s *termService) GetTerms4Student(ctx context.Context, studentID string) (*response.ListTermsResDTO, error) {
+func (s *termService) GetTermsByStudent(ctx context.Context, studentID string) ([]response.TermsByStudentResDTO, error) {
 	// get student info
 	student, err := s.userGateway.GetStudentInfo(ctx, studentID)
 	if err != nil {
@@ -263,12 +263,8 @@ func (s *termService) GetTerms4Student(ctx context.Context, studentID string) (*
 	}
 
 	if len(terms) == 0 {
-		return &response.ListTermsResDTO{
-			Terms: make([]response.TermResDTO, 0),
-		}, nil
+		return []response.TermsByStudentResDTO{}, nil
 	}
 
-	return &response.ListTermsResDTO{
-		Terms: mappers.MapTermListToResDTO(terms),
-	}, nil
+	return mappers.MapTermsByStudentToResDTO(terms), nil
 }

@@ -132,14 +132,14 @@ func (h *TermHandler) GetTermsByOrgID(c *gin.Context) {
 	helper.SendSuccess(c, http.StatusOK, "Success", terms)
 }
 
-func (h *TermHandler) GetTerms4Student(c *gin.Context) {
+func (h *TermHandler) GetTermsByStudent(c *gin.Context) {
 	studentID := c.Param("student_id")
 	if studentID == "" {
 		helper.SendError(c, http.StatusBadRequest, fmt.Errorf("missing studentID"), helper.ErrInvalidOperation)
 		return
 	}
 
-	terms, err := h.service.GetTerms4Student(c.Request.Context(), studentID)
+	terms, err := h.service.GetTermsByStudent(c.Request.Context(), studentID)
 	if err != nil {
 		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInvalidOperation)
 		return
