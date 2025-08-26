@@ -180,7 +180,7 @@ func (h *TermHandler) UploadTerm(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UploadTerms(c, terms); err != nil {
+	if err := h.service.UploadTerms(c.Request.Context(), terms); err != nil {
 		helper.SendError(c, http.StatusInternalServerError, err, err.Error())
 		return
 	}
