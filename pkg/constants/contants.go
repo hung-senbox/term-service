@@ -112,8 +112,9 @@ func (c ContextKey) String() string {
 }
 
 var (
-	Token     ContextKey = "token"
-	UserID    ContextKey = "user_id"
-	UserName  ContextKey = "user_name"
-	UserRoles ContextKey = "roles"
+	Token          ContextKey = "token"
+	UserID         ContextKey = "user_id"
+	UserName       ContextKey = "user_name"
+	UserRoles      ContextKey = "roles"
+	CurrentUserKey ContextKey = "currentUser"
 )

@@ -4,7 +4,10 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"term-service/internal/gateway"
+	"term-service/logger"
 	"term-service/pkg/constants"
+	"term-service/pkg/helper"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -62,6 +65,66 @@ func Secured() gin.HandlerFunc {
 	}
 }
 
+func SecuredV2(userGW gateway.UserGateway) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authorizationHeader := c.GetHeader("Authorization")
+
+		if len(authorizationHeader) == 0 {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+				"error": "authorization header required",
+			})
+			return
+		}
+
+		if !strings.HasPrefix(authorizationHeader, "Bearer ") {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"error": "invalid authorization header",
+			})
+			return
+		}
+
+		tokenString := strings.Split(authorizationHeader, " ")[1]
+
+		// parse unverified để extract claims nếu cần
+		token, _, _ := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			// optional: bạn vẫn có thể lấy claim trước khi call user-service
+			if userId, ok := claims[constants.UserID.String()].(string); ok {
+				c.Set(constants.UserID.String(), userId)
+			}
+		}
+
+		// gọi user-service để lấy current user
+		currentUser, err := userGW.GetCurrentUser(
+			context.WithValue(c.Request.Context(), constants.Token, tokenString),
+		)
+		if err != nil {
+			logger.WriteLogEx("error", "failed to get current user", map[string]any{
+				"error": err.Error(),
+			})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"error": "unauthorized",
+			})
+			return
+		}
+
+		// set currentUser vào gin.Context
+		c.Set(string(constants.CurrentUserKey), currentUser)
+
+		// set vào request.Context để service khác có thể lấy
+		ctx := context.WithValue(c.Request.Context(), constants.CurrentUserKey, currentUser)
+		c.Request = c.Request.WithContext(ctx)
+
+		// cũng set token để reuse
+		c.Set(constants.Token.String(), tokenString)
+		c.Request = c.Request.WithContext(
+			context.WithValue(c.Request.Context(), constants.Token, tokenString),
+		)
+
+		c.Next()
+	}
+}
+
 func RequireAdmin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		rolesAny, exists := c.Get(constants.UserRoles.String())
@@ -88,6 +151,49 @@ func RequireAdmin() gin.HandlerFunc {
 
 		if !isAdmin {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Admin access required"})
+			return
+		}
+
+		c.Next()
+	}
+}
+
+func RequireIsSuperAdminOrOrgAdmin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		currentUser, ok := helper.CurrentUserFromCtx(c.Request.Context())
+		if !ok || currentUser == nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"error": "current user not found in context",
+			})
+			return
+		}
+
+		// nếu user là SuperAdmin thì pass ngay
+		if currentUser.IsSuperAdmin {
+			c.Next()
+			return
+		}
+
+		// kiểm tra Roles slice
+		if currentUser.Roles == nil || len(*currentUser.Roles) == 0 {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+				"error": "roles not found for current user",
+			})
+			return
+		}
+
+		isAllowed := false
+		for _, role := range *currentUser.Roles {
+			if strings.EqualFold(role.RoleName, "SuperAdmin") {
+				isAllowed = true
+				break
+			}
+		}
+
+		if !isAllowed {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+				"error": "permission denied: require SuperAdmin or OrgAdmin",
+			})
 			return
 		}
 

@@ -7,12 +7,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"term-service/helper"
 	"term-service/internal/term/dto/request"
 	"term-service/internal/term/mappers"
 	"term-service/internal/term/model"
 	"term-service/internal/term/service"
-	pkg_helpder "term-service/pkg/helper"
+	"term-service/pkg/helper"
 )
 
 type TermHandler struct {
@@ -41,7 +40,7 @@ func (h *TermHandler) CreateTerm(c *gin.Context) {
 		return
 	}
 
-	if !pkg_helpder.ValidateDateRange(startDate, endDate) {
+	if !helper.ValidateDateRange(startDate, endDate) {
 		helper.SendError(c, http.StatusBadRequest, nil, "start_date must be before or equal to end_date")
 		return
 	}
