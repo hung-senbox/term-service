@@ -48,6 +48,7 @@ func SendError(c *gin.Context, statusCode int, err error, errorCode string) {
 	c.JSON(statusCode, APIResponse{
 		StatusCode: statusCode,
 		Error:      errMsg,
+		Message:    errMsg,
 		ErrorCode:  errorCode,
 	})
 }
