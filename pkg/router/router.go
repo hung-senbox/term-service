@@ -2,6 +2,10 @@ package router
 
 import (
 	"term-service/internal/gateway"
+	holiday_handler "term-service/internal/holiday/handler"
+	holiday_repo "term-service/internal/holiday/repository"
+	holiday_route "term-service/internal/holiday/route"
+	holiday_service "term-service/internal/holiday/service"
 	"term-service/internal/term/handler"
 	"term-service/internal/term/repository"
 	"term-service/internal/term/route"
@@ -12,7 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SetupRouter(mongoCollection *mongo.Collection, consulClient *api.Client) *gin.Engine {
+func SetupRouter(termCollection *mongo.Collection, holidayCollection *mongo.Collection, consulClient *api.Client) *gin.Engine {
 	r := gin.Default()
 	// consul
 	//consulClient, _ := api.NewClient(api.DefaultConfig())
@@ -21,13 +25,19 @@ func SetupRouter(mongoCollection *mongo.Collection, consulClient *api.Client) *g
 	userGateway := gateway.NewUserGateway("go-main-service", consulClient)
 	orgGateway := gateway.NewOrganizationGateway("go-main-service", consulClient)
 
-	// Setup dependency injection
-	repo := repository.NewTermRepository(mongoCollection)
-	svc := service.NewTermService(repo, userGateway, orgGateway)
-	h := handler.NewHandler(svc)
+	// Term
+	termRepo := repository.NewTermRepository(termCollection)
+	termSvc := service.NewTermService(termRepo, userGateway, orgGateway)
+	termHandler := handler.NewHandler(termSvc)
+
+	// Holiday
+	holidayRepo := holiday_repo.NewHolidayRepository(holidayCollection)
+	holidaySvc := holiday_service.NewHolidayService(holidayRepo, userGateway, orgGateway)
+	holidayHandler := holiday_handler.NewHandler(holidaySvc)
 
 	// Register routes
-	route.RegisterTermRoutes(r, h)
+	route.RegisterTermRoutes(r, termHandler)
+	holiday_route.RegisterHolidayRoutes(r, holidayHandler)
 
 	return r
 }

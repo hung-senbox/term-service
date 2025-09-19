@@ -13,6 +13,7 @@ import (
 
 var MongoClient *mongo.Client
 var TermCollection *mongo.Collection
+var HolidayCollection *mongo.Collection
 
 func ConnectMongoDB() {
 	d := config.AppConfig.Database.Mongo
@@ -40,5 +41,6 @@ func ConnectMongoDB() {
 	}
 
 	TermCollection = MongoClient.Database(d.Name).Collection("terms")
-	log.Println("Connected to MongoDB and loaded 'terms' collection")
+	HolidayCollection = MongoClient.Database(d.Name).Collection("holidays")
+	log.Println("Connected to MongoDB and loaded 'terms' and 'holidays' collection")
 }
