@@ -60,8 +60,8 @@ func (h *TermHandler) CreateTerm(c *gin.Context) {
 	helper.SendSuccess(c, http.StatusCreated, "Success", res)
 }
 
-func (h *TermHandler) ListTerms(c *gin.Context) {
-	terms, err := h.service.ListTerms(c.Request.Context())
+func (h *TermHandler) GetTerms4Web(c *gin.Context) {
+	terms, err := h.service.GetTerms4Web(c.Request.Context())
 	if err != nil {
 		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInvalidOperation)
 		return
@@ -154,7 +154,7 @@ func (h *TermHandler) GetTerms4App(c *gin.Context) {
 		return
 	}
 
-	terms, err := h.service.GetTerm4App(c.Request.Context(), organizationID)
+	terms, err := h.service.GetTerms4App(c.Request.Context(), organizationID)
 	if err != nil {
 		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
 		return

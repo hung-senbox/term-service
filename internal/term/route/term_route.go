@@ -15,7 +15,7 @@ func RegisterTermRoutes(r *gin.Engine, h *handler.TermHandler) {
 		termsAdmin := adminGroup.Group("/terms")
 		{
 			termsAdmin.POST("", h.UploadTerm)
-			termsAdmin.GET("", h.ListTerms)
+			termsAdmin.GET("", h.GetTerms4Web)
 			termsAdmin.GET("/student/:student_id", h.GetTermsByStudent)
 		}
 	}

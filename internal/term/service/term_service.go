@@ -10,7 +10,6 @@ import (
 	"term-service/internal/term/mappers"
 	"term-service/internal/term/model"
 	"term-service/internal/term/repository"
-	"term-service/logger"
 	pkg_helpder "term-service/pkg/helper"
 	"time"
 
@@ -22,13 +21,13 @@ type TermService interface {
 	GetTermByID(ctx context.Context, id string) (*model.Term, error)
 	UpdateTerm(ctx context.Context, id string, term *model.Term) error
 	DeleteTerm(ctx context.Context, id string) error
-	ListTerms(ctx context.Context) (*response.ListTermsOrgResDTO, error)
+	GetTerms4Web(ctx context.Context) (*response.ListTermsOrgResDTO, error)
 	GetCurrentTerm(ctx context.Context) (response.CurrentTermResDTO, error)
 	UploadTerms(ctx context.Context, req []request.UploadTermItem) error
 	GetTermsByOrgID(ctx context.Context, orgID string) (*response.ListTermsResDTO, error)
 	GetTermsByStudent(ctx context.Context, studentID string) ([]response.TermsByStudentResDTO, error)
 	GetCurrentTermByOrg(ctx context.Context, organizationID string) (response.CurrentTermResDTO, error)
-	GetTerm4App(ctx context.Context, organizationID string) (*response.GetTerms4AppResDTO, error)
+	GetTerms4App(ctx context.Context, organizationID string) (*response.GetTerms4AppResDTO, error)
 }
 
 type termService struct {
@@ -61,7 +60,7 @@ func (s *termService) DeleteTerm(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *termService) ListTerms(ctx context.Context) (*response.ListTermsOrgResDTO, error) {
+func (s *termService) GetTerms4Web(ctx context.Context) (*response.ListTermsOrgResDTO, error) {
 	currentUser, err := s.userGateway.GetCurrentUser(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get current user info failed: %w", err)
@@ -158,14 +157,11 @@ func (s *termService) UploadTerms(ctx context.Context, req []request.UploadTermI
 
 	// check is super admin & check org admin
 	if currentUser.IsSuperAdmin || currentUser.OrganizationAdmin.ID == "" {
-		logger.WriteLogEx("warn", "Access denied for super admin", map[string]any{
-			"user_id": currentUser.ID,
-		})
 		return fmt.Errorf("access denied: super admin cannot perform this action")
 	}
 	organizationAdminID := currentUser.OrganizationAdmin.ID
 
-	// Upsert terms (không cần delete nữa)
+	// Upsert
 	for _, t := range req {
 		startDate, err := time.Parse("2006-01-02", t.StartDate)
 		if err != nil {
@@ -185,10 +181,6 @@ func (s *termService) UploadTerms(ctx context.Context, req []request.UploadTermI
 			// Update existing term
 			existing, err := s.repo.GetByID(ctx, t.ID)
 			if err != nil {
-				logger.WriteLogEx("error", "Get term in UploadTerms failed", map[string]any{
-					"term_id": t.ID,
-					"error":   err.Error(),
-				})
 				if errors.Is(err, gorm.ErrRecordNotFound) {
 					return fmt.Errorf("term not found: %s", t.ID)
 				}
@@ -270,7 +262,7 @@ func (s *termService) GetTermsByStudent(ctx context.Context, studentID string) (
 	return mappers.MapTermsByStudentToResDTO(terms), nil
 }
 
-func (s *termService) GetTerm4App(ctx context.Context, organizationID string) (*response.GetTerms4AppResDTO, error) {
+func (s *termService) GetTerms4App(ctx context.Context, organizationID string) (*response.GetTerms4AppResDTO, error) {
 	terms, err := s.repo.GetAllByOrgID4App(ctx, organizationID)
 	if err != nil {
 		return nil, fmt.Errorf("get terms by orgID failed: %w", err)

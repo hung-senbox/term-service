@@ -77,6 +77,8 @@ func (r *termRepository) Update(ctx context.Context, id string, updated *model.T
 			"color":             updated.Color,
 			"published_mobile":  updated.PublishedMobile,
 			"published_desktop": updated.PublishedDesktop,
+			"published_teacher": updated.PublishedTeacher,
+			"published_parent":  updated.PublishedParent,
 			"end_date":          updated.EndDate,
 			"updated_at":        updated.UpdatedAt,
 		},
