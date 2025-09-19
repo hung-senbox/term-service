@@ -14,3 +14,7 @@ type TemsByOrgRes struct {
 type ListTermsResDTO struct {
 	Terms []TermResDTO `json:"terms"`
 }
+
+type GetTerms4AppResDTO struct {
+	Terms []CurrentTermResDTO `json:"terms"`
+}

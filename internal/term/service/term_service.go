@@ -28,6 +28,7 @@ type TermService interface {
 	GetTermsByOrgID(ctx context.Context, orgID string) (*response.ListTermsResDTO, error)
 	GetTermsByStudent(ctx context.Context, studentID string) ([]response.TermsByStudentResDTO, error)
 	GetCurrentTermByOrg(ctx context.Context, organizationID string) (response.CurrentTermResDTO, error)
+	GetTerm4App(ctx context.Context, organizationID string) (*response.GetTerms4AppResDTO, error)
 }
 
 type termService struct {
@@ -267,4 +268,15 @@ func (s *termService) GetTermsByStudent(ctx context.Context, studentID string) (
 	}
 
 	return mappers.MapTermsByStudentToResDTO(terms), nil
+}
+
+func (s *termService) GetTerm4App(ctx context.Context, organizationID string) (*response.GetTerms4AppResDTO, error) {
+	terms, err := s.repo.GetAllByOrgID4App(ctx, organizationID)
+	if err != nil {
+		return nil, fmt.Errorf("get terms by orgID failed: %w", err)
+	}
+
+	return &response.GetTerms4AppResDTO{
+		Terms: mappers.MapTermListToCurrentResDTO(terms),
+	}, nil
 }

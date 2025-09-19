@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type TermRepository interface {
@@ -20,6 +21,7 @@ type TermRepository interface {
 	GetCurrentTerm(ctx context.Context) (*model.Term, error)
 	GetAllByOrgID(ctx context.Context, orgID string) ([]*model.Term, error)
 	GetCurrentTermByOrg(ctx context.Context, organizationID string) (*model.Term, error)
+	GetAllByOrgID4App(ctx context.Context, orgID string) ([]*model.Term, error)
 }
 
 type termRepository struct {
@@ -174,6 +176,29 @@ func (r *termRepository) GetAllByOrgID(ctx context.Context, orgID string) ([]*mo
 	}
 
 	cur, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	var terms []*model.Term
+	if err := cur.All(ctx, &terms); err != nil {
+		return nil, err
+	}
+
+	return terms, nil
+}
+
+func (r *termRepository) GetAllByOrgID4App(ctx context.Context, orgID string) ([]*model.Term, error) {
+	filter := bson.M{
+		"organization_id":  orgID,
+		"published_mobile": true,
+	}
+
+	// sort theo created_at ASC
+	findOptions := options.Find().SetSort(bson.D{{Key: "created_at", Value: 1}})
+
+	cur, err := r.collection.Find(ctx, filter, findOptions)
 	if err != nil {
 		return nil, err
 	}

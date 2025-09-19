@@ -98,3 +98,17 @@ func MapTermsByStudentToResDTO(terms []*model.Term) []response.TermsByStudentRes
 	}
 	return result
 }
+
+func MapTermListToCurrentResDTO(terms []*model.Term) []response.CurrentTermResDTO {
+	if terms == nil {
+		return []response.CurrentTermResDTO{}
+	}
+
+	res := make([]response.CurrentTermResDTO, 0, len(terms))
+	for _, t := range terms {
+		if t != nil {
+			res = append(res, MapTermToCurrentResDTO(t))
+		}
+	}
+	return res
+}

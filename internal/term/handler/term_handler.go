@@ -146,3 +146,19 @@ func (h *TermHandler) GetTermsByStudent(c *gin.Context) {
 
 	helper.SendSuccess(c, http.StatusOK, "Success", terms)
 }
+
+func (h *TermHandler) GetTerms4App(c *gin.Context) {
+	organizationID := c.Query("organization_id")
+	if organizationID == "" {
+		helper.SendError(c, http.StatusBadRequest, fmt.Errorf("missing organization_id in"), helper.ErrInvalidOperation)
+		return
+	}
+
+	terms, err := h.service.GetTerm4App(c.Request.Context(), organizationID)
+	if err != nil {
+		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
+		return
+	}
+
+	helper.SendSuccess(c, http.StatusOK, "Success", terms.Terms)
+}
