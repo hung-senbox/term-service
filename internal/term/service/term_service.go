@@ -21,7 +21,7 @@ type TermService interface {
 	GetTermByID(ctx context.Context, id string) (*model.Term, error)
 	UpdateTerm(ctx context.Context, id string, term *model.Term) error
 	DeleteTerm(ctx context.Context, id string) error
-	GetTerms4Web(ctx context.Context) (*response.ListTermsOrgResDTO, error)
+	GetTerms4Web(ctx context.Context) (*response.GetTerms4WebResDTO, error)
 	GetCurrentTerm(ctx context.Context) (response.CurrentTermResDTO, error)
 	UploadTerms(ctx context.Context, req []request.UploadTermItem) error
 	GetTermsByOrgID(ctx context.Context, orgID string) (*response.ListTermsResDTO, error)
@@ -60,13 +60,13 @@ func (s *termService) DeleteTerm(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *termService) GetTerms4Web(ctx context.Context) (*response.ListTermsOrgResDTO, error) {
+func (s *termService) GetTerms4Web(ctx context.Context) (*response.GetTerms4WebResDTO, error) {
 	currentUser, err := s.userGateway.GetCurrentUser(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get current user info failed: %w", err)
 	}
 
-	var result []response.TemsByOrgRes
+	var result []response.TermsByOrgRes
 
 	if currentUser.IsSuperAdmin {
 		// Lấy toàn bộ org từ Gateway
@@ -81,7 +81,7 @@ func (s *termService) GetTerms4Web(ctx context.Context) (*response.ListTermsOrgR
 				return nil, fmt.Errorf("get terms by orgID %s failed: %w", org.ID, err)
 			}
 
-			result = append(result, response.TemsByOrgRes{
+			result = append(result, response.TermsByOrgRes{
 				OrganizationName: org.OrganizationName,
 				Terms:            mappers.MapTermListToResDTO(terms),
 			})
@@ -100,7 +100,7 @@ func (s *termService) GetTerms4Web(ctx context.Context) (*response.ListTermsOrgR
 			return nil, fmt.Errorf("get organization info failed: %w", err)
 		}
 
-		result = append(result, response.TemsByOrgRes{
+		result = append(result, response.TermsByOrgRes{
 			OrganizationName: orgInfo.OrganizationName,
 			Terms:            mappers.MapTermListToResDTO(terms),
 		})
@@ -109,7 +109,7 @@ func (s *termService) GetTerms4Web(ctx context.Context) (*response.ListTermsOrgR
 		return nil, fmt.Errorf("access denied: user is not an organization admin")
 	}
 
-	return &response.ListTermsOrgResDTO{
+	return &response.GetTerms4WebResDTO{
 		TermsOrg: result,
 	}, nil
 }

@@ -1,10 +1,10 @@
 package response
 
-type ListTermsOrgResDTO struct {
-	TermsOrg []TemsByOrgRes `json:"terms_org"`
+type GetTerms4WebResDTO struct {
+	TermsOrg []TermsByOrgRes `json:"terms_org"`
 }
 
-type TemsByOrgRes struct {
+type TermsByOrgRes struct {
 	OrganizationName string       `json:"organization_name"`
 	Terms            []TermResDTO `json:"terms"`
 }

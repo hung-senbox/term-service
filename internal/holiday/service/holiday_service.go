@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"term-service/internal/gateway"
 	"term-service/internal/holiday/dto/request"
+	"term-service/internal/holiday/dto/response"
+	"term-service/internal/holiday/mapper"
 	"term-service/internal/holiday/model"
 	"term-service/internal/holiday/repository"
 	pkg_helpder "term-service/pkg/helper"
@@ -16,6 +18,7 @@ import (
 
 type HolidayService interface {
 	UploadHolidays(ctx context.Context, req request.UploadHolidayRequest) error
+	GetHolidays4Web(ctx context.Context) (*response.GetHolidays4WebResDTO, error)
 }
 
 type holidayService struct {
@@ -110,4 +113,58 @@ func (s *holidayService) UploadHolidays(ctx context.Context, req request.UploadH
 	}
 
 	return nil
+}
+
+func (s *holidayService) GetHolidays4Web(ctx context.Context) (*response.GetHolidays4WebResDTO, error) {
+	currentUser, err := s.userGateway.GetCurrentUser(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get current user info failed: %w", err)
+	}
+
+	var result []response.HolidaysByOrgRes
+
+	if currentUser.IsSuperAdmin {
+		// Lấy toàn bộ org từ Gateway
+		orgs, err := s.orgGateway.GetAllOrg(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("get all organizations failed: %w", err)
+		}
+
+		for _, org := range orgs {
+			holidays, err := s.repo.GetAllByOrgID(ctx, org.ID)
+			if err != nil {
+				return nil, fmt.Errorf("get holidays by orgID %s failed: %w", org.ID, err)
+			}
+
+			result = append(result, response.HolidaysByOrgRes{
+				OrganizationName: org.OrganizationName,
+				Holidays:         mapper.MapHolidayListToResDTO(holidays),
+			})
+		}
+
+	} else if currentUser.OrganizationAdmin.ID != "" {
+		// User là org admin → chỉ lấy org của mình
+		orgID := currentUser.OrganizationAdmin.ID
+		holidays, err := s.repo.GetAllByOrgID(ctx, orgID)
+		if err != nil {
+			return nil, fmt.Errorf("get holidays by orgID %s failed: %w", orgID, err)
+		}
+
+		orgInfo, err := s.orgGateway.GetOrganizationInfo(ctx, orgID)
+		if err != nil {
+			return nil, fmt.Errorf("get organization info failed: %w", err)
+		}
+
+		result = append(result, response.HolidaysByOrgRes{
+			OrganizationName: orgInfo.OrganizationName,
+			Holidays:         mapper.MapHolidayListToResDTO(holidays),
+		})
+
+	} else {
+		return nil, fmt.Errorf("access denied: user is not an organization admin")
+	}
+
+	return &response.GetHolidays4WebResDTO{
+		HolidaysOrg: result,
+	}, nil
 }
