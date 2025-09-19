@@ -15,7 +15,7 @@ func ValidateDateRange(start, end time.Time) bool {
 
 func FormatRemainingDays(days int) string {
 	if days <= 0 {
-		return "Expired"
+		return ""
 	}
 	return fmt.Sprintf("%d", days)
 }
