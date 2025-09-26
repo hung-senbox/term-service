@@ -250,7 +250,7 @@ func (s *termService) GetTermsByStudent(ctx context.Context, studentID string) (
 	}
 
 	// get terms by orgID
-	terms, err := s.repo.GetAllByOrgID(ctx, student.OrganizationID)
+	terms, err := s.repo.GetAllByOrgID4App(ctx, student.OrganizationID)
 	if err != nil {
 		return nil, fmt.Errorf("get terms by orgID failed: %w", err)
 	}
