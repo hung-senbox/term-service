@@ -34,7 +34,6 @@ func NewTermRepository(collection *mongo.Collection) TermRepository {
 
 // Create inserts a new term
 func (r *termRepository) Create(ctx context.Context, term *model.Term) (*model.Term, error) {
-	term.ID = primitive.NewObjectID()
 	now := time.Now()
 	term.CreatedAt = now
 	term.UpdatedAt = now

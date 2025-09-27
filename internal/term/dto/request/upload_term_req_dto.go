@@ -11,3 +11,9 @@ type UploadTermItem struct {
 	StartDate        string `json:"start_date"`
 	EndDate          string `json:"end_date"`
 }
+
+type UploadTermRequest struct {
+	LanguageID uint             `json:"language_id" binding:"required"`
+	Word       string           `json:"word" binding:"required"`
+	Terms      []UploadTermItem `json:"terms" binding:"required"`
+}

@@ -5,14 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"term-service/internal/gateway"
+	"term-service/internal/gateway/dto"
 	"term-service/internal/term/dto/request"
 	"term-service/internal/term/dto/response"
 	"term-service/internal/term/mappers"
 	"term-service/internal/term/model"
 	"term-service/internal/term/repository"
+	"term-service/pkg/helper"
 	pkg_helpder "term-service/pkg/helper"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gorm.io/gorm"
 )
 
@@ -23,7 +26,7 @@ type TermService interface {
 	DeleteTerm(ctx context.Context, id string) error
 	GetTerms4Web(ctx context.Context) (*response.GetTerms4WebResDTO, error)
 	GetCurrentTerm(ctx context.Context) (response.CurrentTermResDTO, error)
-	UploadTerms(ctx context.Context, req []request.UploadTermItem) error
+	UploadTerms(ctx context.Context, req request.UploadTermRequest) error
 	GetTermsByOrgID(ctx context.Context, orgID string) (*response.ListTermsResDTO, error)
 	GetTermsByStudent(ctx context.Context, studentID string) ([]response.TermsByStudentResDTO, error)
 	GetCurrentTermByOrg(ctx context.Context, organizationID string) (response.CurrentTermResDTO, error)
@@ -31,16 +34,18 @@ type TermService interface {
 }
 
 type termService struct {
-	repo        repository.TermRepository
-	userGateway gateway.UserGateway
-	orgGateway  gateway.OrganizationGateway
+	repo                   repository.TermRepository
+	userGateway            gateway.UserGateway
+	orgGateway             gateway.OrganizationGateway
+	messageLanguageGateway gateway.MessageLanguageGateway
 }
 
-func NewTermService(repo repository.TermRepository, userGateway gateway.UserGateway, orgGateway gateway.OrganizationGateway) TermService {
+func NewTermService(repo repository.TermRepository, userGateway gateway.UserGateway, orgGateway gateway.OrganizationGateway, messageLanguageGateway gateway.MessageLanguageGateway) TermService {
 	return &termService{
-		repo:        repo,
-		userGateway: userGateway,
-		orgGateway:  orgGateway,
+		repo:                   repo,
+		userGateway:            userGateway,
+		orgGateway:             orgGateway,
+		messageLanguageGateway: messageLanguageGateway,
 	}
 }
 
@@ -81,7 +86,14 @@ func (s *termService) GetTerms4Web(ctx context.Context) (*response.GetTerms4WebR
 				return nil, fmt.Errorf("get terms by orgID %s failed: %w", org.ID, err)
 			}
 
+			// --- gọi message language gateway ---
+			msgLangs, _ := s.messageLanguageGateway.GetMessageLanguages(ctx, "term", org.ID)
+			if msgLangs == nil {
+				msgLangs = []dto.MessageLanguageResponse{}
+			}
+
 			result = append(result, response.TermsByOrgRes{
+				MessageLanguages: msgLangs,
 				OrganizationName: org.OrganizationName,
 				Terms:            mappers.MapTermListToResDTO(terms),
 			})
@@ -100,7 +112,14 @@ func (s *termService) GetTerms4Web(ctx context.Context) (*response.GetTerms4WebR
 			return nil, fmt.Errorf("get organization info failed: %w", err)
 		}
 
+		// --- gọi message language gateway ---
+		msgLangs, _ := s.messageLanguageGateway.GetMessageLanguages(ctx, "term", orgID)
+		if msgLangs == nil {
+			msgLangs = []dto.MessageLanguageResponse{}
+		}
+
 		result = append(result, response.TermsByOrgRes{
+			MessageLanguages: msgLangs,
 			OrganizationName: orgInfo.OrganizationName,
 			Terms:            mappers.MapTermListToResDTO(terms),
 		})
@@ -148,7 +167,7 @@ func (s *termService) GetCurrentTermByOrg(ctx context.Context, organizationID st
 	return mappers.MapTermToCurrentResDTO(term), nil
 }
 
-func (s *termService) UploadTerms(ctx context.Context, req []request.UploadTermItem) error {
+func (s *termService) UploadTerms(ctx context.Context, req request.UploadTermRequest) error {
 	// get organization admin from user context
 	currentUser, err := s.userGateway.GetCurrentUser(ctx)
 	if err != nil {
@@ -161,8 +180,8 @@ func (s *termService) UploadTerms(ctx context.Context, req []request.UploadTermI
 	}
 	organizationAdminID := currentUser.OrganizationAdmin.ID
 
-	// Upsert
-	for _, t := range req {
+	// Upsert terms
+	for _, t := range req.Terms {
 		startDate, err := time.Parse("2006-01-02", t.StartDate)
 		if err != nil {
 			return fmt.Errorf("invalid start_date for term %s: %w", t.Title, err)
@@ -200,9 +219,17 @@ func (s *termService) UploadTerms(ctx context.Context, req []request.UploadTermI
 			if err := s.repo.Update(ctx, t.ID, existing); err != nil {
 				return fmt.Errorf("failed to update term %s: %w", t.ID, err)
 			}
+
+			// goi messs lang gw upload message
+			err = s.uploadMessages(ctx, helper.BuildTermMessagesUpload(organizationAdminID, req, req.LanguageID))
+			if err != nil {
+				return fmt.Errorf("upload department messages failed")
+			}
+
 		} else {
 			// Create new term
 			newTerm := &model.Term{
+				ID:               primitive.NewObjectID(),
 				OrganizationID:   organizationAdminID,
 				Title:            t.Title,
 				Color:            t.Color,
@@ -219,9 +246,13 @@ func (s *termService) UploadTerms(ctx context.Context, req []request.UploadTermI
 			if _, err := s.repo.Create(ctx, newTerm); err != nil {
 				return fmt.Errorf("failed to create term %s: %w", t.Title, err)
 			}
+
+			err = s.uploadMessages(ctx, helper.BuildTermMessagesUpload(organizationAdminID, req, req.LanguageID))
+			if err != nil {
+				return fmt.Errorf("upload department messages failed")
+			}
 		}
 	}
-
 	return nil
 }
 
@@ -271,4 +302,14 @@ func (s *termService) GetTerms4App(ctx context.Context, organizationID string) (
 	return &response.GetTerms4AppResDTO{
 		Terms: mappers.MapTermListToCurrentResDTO(terms),
 	}, nil
+}
+
+func (s *termService) uploadMessages(ctx context.Context, req dto.UploadMessageLanguagesRequest) error {
+	err := s.messageLanguageGateway.UploadMessages(ctx, req)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

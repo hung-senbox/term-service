@@ -125,6 +125,7 @@ type MessageLangKey string
 
 const (
 	HolidayTitleKey MessageLangKey = "title"
+	TermWordKey     MessageLangKey = "word"
 )
 
 // MessageLangType defines the type of message language

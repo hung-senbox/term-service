@@ -6,6 +6,7 @@ import (
 	"strings"
 	"term-service/internal/gateway/dto"
 	"term-service/internal/holiday/dto/request"
+	term_request "term-service/internal/term/dto/request"
 	"term-service/pkg/constants"
 )
 
@@ -32,6 +33,20 @@ func BuildHolidayMessagesUpload(holidayID string, req request.UploadHolidayItem,
 				Type:       string(constants.HolidayType),
 				Key:        string(constants.HolidayTitleKey),
 				Value:      req.Title,
+				LanguageID: langID,
+			},
+		},
+	}
+}
+
+func BuildTermMessagesUpload(termID string, req term_request.UploadTermRequest, langID uint) dto.UploadMessageLanguagesRequest {
+	return dto.UploadMessageLanguagesRequest{
+		MessageLanguages: []dto.UploadMessageRequest{
+			{
+				TypeID:     termID,
+				Type:       string(constants.TermType),
+				Key:        string(constants.TermWordKey),
+				Value:      req.Word,
 				LanguageID: langID,
 			},
 		},

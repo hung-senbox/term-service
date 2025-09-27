@@ -28,7 +28,7 @@ func SetupRouter(termCollection *mongo.Collection, holidayCollection *mongo.Coll
 
 	// Term
 	termRepo := repository.NewTermRepository(termCollection)
-	termSvc := service.NewTermService(termRepo, userGateway, orgGateway)
+	termSvc := service.NewTermService(termRepo, userGateway, orgGateway, messageLanguageGW)
 	termHandler := handler.NewHandler(termSvc)
 
 	// Holiday

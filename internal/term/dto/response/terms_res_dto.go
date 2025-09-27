@@ -1,12 +1,15 @@
 package response
 
+import "term-service/internal/gateway/dto"
+
 type GetTerms4WebResDTO struct {
-	TermsOrg []TermsByOrgRes `json:"terms_org"`
+	TermsOrg []TermsByOrgRes `json:"term_organizations"`
 }
 
 type TermsByOrgRes struct {
-	OrganizationName string       `json:"organization_name"`
-	Terms            []TermResDTO `json:"terms"`
+	MessageLanguages []dto.MessageLanguageResponse `json:"message_languages"`
+	OrganizationName string                        `json:"organization_name"`
+	Terms            []TermResDTO                  `json:"terms"`
 }
 
 /////// LIST TERMS

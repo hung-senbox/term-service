@@ -101,13 +101,13 @@ func (h *TermHandler) GetCurrentTerm(c *gin.Context) {
 }
 
 func (h *TermHandler) UploadTerm(c *gin.Context) {
-	var terms []request.UploadTermItem
-	if err := c.ShouldBindJSON(&terms); err != nil {
+	var req request.UploadTermRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
 		return
 	}
 
-	if err := h.service.UploadTerms(c.Request.Context(), terms); err != nil {
+	if err := h.service.UploadTerms(c.Request.Context(), req); err != nil {
 		helper.SendError(c, http.StatusInternalServerError, err, err.Error())
 		return
 	}

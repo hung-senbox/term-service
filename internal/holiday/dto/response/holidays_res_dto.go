@@ -1,7 +1,7 @@
 package response
 
 type GetHolidays4WebResDTO struct {
-	HolidaysOrg []HolidaysByOrgRes `json:"holidays_org"`
+	HolidaysOrg []HolidaysByOrgRes `json:"holiday_organizations"`
 }
 
 type HolidaysByOrgRes struct {
