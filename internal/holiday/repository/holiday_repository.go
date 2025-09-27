@@ -32,7 +32,6 @@ func NewHolidayRepository(collection *mongo.Collection) HolidayRepository {
 
 // Create inserts a new holiday
 func (r *holidayRepository) Create(ctx context.Context, holiday *model.Holiday) (*model.Holiday, error) {
-	holiday.ID = primitive.NewObjectID()
 	now := time.Now()
 	holiday.CreatedAt = now
 	holiday.UpdatedAt = now

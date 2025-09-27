@@ -11,6 +11,7 @@ type UploadHolidayItem struct {
 }
 
 type UploadHolidayRequest struct {
-	DeleteIds []string            `json:"delete_ids"`
-	Holidays  []UploadHolidayItem `json:"holidays"`
+	LanguageID uint                `json:"language_id" binding:"required"`
+	DeleteIds  []string            `json:"delete_ids"`
+	Holidays   []UploadHolidayItem `json:"holidays"`
 }

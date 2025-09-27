@@ -5,14 +5,18 @@ import (
 	"errors"
 	"fmt"
 	"term-service/internal/gateway"
+	"term-service/internal/gateway/dto"
 	"term-service/internal/holiday/dto/request"
 	"term-service/internal/holiday/dto/response"
 	"term-service/internal/holiday/mapper"
 	"term-service/internal/holiday/model"
 	"term-service/internal/holiday/repository"
+	"term-service/pkg/constants"
+	"term-service/pkg/helper"
 	pkg_helpder "term-service/pkg/helper"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gorm.io/gorm"
 )
 
@@ -22,16 +26,18 @@ type HolidayService interface {
 }
 
 type holidayService struct {
-	repo        repository.HolidayRepository
-	userGateway gateway.UserGateway
-	orgGateway  gateway.OrganizationGateway
+	repo                   repository.HolidayRepository
+	userGateway            gateway.UserGateway
+	orgGateway             gateway.OrganizationGateway
+	messageLanguageGateway gateway.MessageLanguageGateway
 }
 
-func NewHolidayService(repo repository.HolidayRepository, userGateway gateway.UserGateway, orgGateway gateway.OrganizationGateway) HolidayService {
+func NewHolidayService(repo repository.HolidayRepository, userGateway gateway.UserGateway, orgGateway gateway.OrganizationGateway, messageLanguageGateway gateway.MessageLanguageGateway) HolidayService {
 	return &holidayService{
-		repo:        repo,
-		userGateway: userGateway,
-		orgGateway:  orgGateway,
+		repo:                   repo,
+		userGateway:            userGateway,
+		orgGateway:             orgGateway,
+		messageLanguageGateway: messageLanguageGateway,
 	}
 }
 
@@ -50,9 +56,12 @@ func (s *holidayService) UploadHolidays(ctx context.Context, req request.UploadH
 
 	// 1. Handle delete
 	for _, id := range req.DeleteIds {
-		if err := s.repo.Delete(ctx, id); err != nil {
-			return fmt.Errorf("failed to delete holiday %s: %w", id, err)
+		err := s.repo.Delete(ctx, id)
+		if err != nil {
+			return fmt.Errorf("failed to delete holiday")
 		}
+		// goi GW xoa message lang
+		s.messageLanguageGateway.DeleleByTypeAndTypeID(ctx, string(constants.HolidayType), id)
 	}
 
 	// 2. Handle upsert (create or update)
@@ -92,9 +101,17 @@ func (s *holidayService) UploadHolidays(ctx context.Context, req request.UploadH
 			if err := s.repo.Update(ctx, t.ID, existing); err != nil {
 				return fmt.Errorf("failed to update holiday %s: %w", t.ID, err)
 			}
+
+			// goi messs lang gw upload message
+			err = s.uploadMessages(ctx, helper.BuildHolidayMessagesUpload(existing.ID.Hex(), t, req.LanguageID))
+			if err != nil {
+				return fmt.Errorf("upload department messages failed")
+			}
+
 		} else {
 			// Create new Holiday
 			newHoliday := &model.Holiday{
+				ID:               primitive.NewObjectID(),
 				OrganizationID:   organizationAdminID,
 				Title:            t.Title,
 				Color:            t.Color,
@@ -108,6 +125,13 @@ func (s *holidayService) UploadHolidays(ctx context.Context, req request.UploadH
 
 			if _, err := s.repo.Create(ctx, newHoliday); err != nil {
 				return fmt.Errorf("failed to create holiday %s: %w", t.Title, err)
+			}
+
+			// goi messs lang gw upload message
+			err = s.uploadMessages(ctx, helper.BuildHolidayMessagesUpload(newHoliday.ID.Hex(), t, req.LanguageID))
+
+			if err != nil {
+				return fmt.Errorf("upload department messages failed")
 			}
 		}
 	}
@@ -135,10 +159,20 @@ func (s *holidayService) GetHolidays4Web(ctx context.Context) (*response.GetHoli
 			if err != nil {
 				return nil, fmt.Errorf("get holidays by orgID %s failed: %w", org.ID, err)
 			}
+			holidayDTOs := mapper.MapHolidayListToResDTO(holidays)
+
+			// --- bổ sung message languages ---
+			for i := range holidayDTOs {
+				msgLangs, _ := s.messageLanguageGateway.GetMessageLanguages(ctx, "holiday", holidayDTOs[i].ID)
+				if msgLangs == nil {
+					msgLangs = []dto.MessageLanguageResponse{}
+				}
+				holidayDTOs[i].MessageLanguages = msgLangs
+			}
 
 			result = append(result, response.HolidaysByOrgRes{
 				OrganizationName: org.OrganizationName,
-				Holidays:         mapper.MapHolidayListToResDTO(holidays),
+				Holidays:         holidayDTOs,
 			})
 		}
 
@@ -150,6 +184,17 @@ func (s *holidayService) GetHolidays4Web(ctx context.Context) (*response.GetHoli
 			return nil, fmt.Errorf("get holidays by orgID %s failed: %w", orgID, err)
 		}
 
+		holidayDTOs := mapper.MapHolidayListToResDTO(holidays)
+
+		// --- bổ sung message languages ---
+		for i := range holidayDTOs {
+			msgLangs, _ := s.messageLanguageGateway.GetMessageLanguages(ctx, "holiday", holidayDTOs[i].ID)
+			if msgLangs == nil {
+				msgLangs = []dto.MessageLanguageResponse{}
+			}
+			holidayDTOs[i].MessageLanguages = msgLangs
+		}
+
 		orgInfo, err := s.orgGateway.GetOrganizationInfo(ctx, orgID)
 		if err != nil {
 			return nil, fmt.Errorf("get organization info failed: %w", err)
@@ -157,7 +202,7 @@ func (s *holidayService) GetHolidays4Web(ctx context.Context) (*response.GetHoli
 
 		result = append(result, response.HolidaysByOrgRes{
 			OrganizationName: orgInfo.OrganizationName,
-			Holidays:         mapper.MapHolidayListToResDTO(holidays),
+			Holidays:         holidayDTOs,
 		})
 
 	} else {
@@ -167,4 +212,14 @@ func (s *holidayService) GetHolidays4Web(ctx context.Context) (*response.GetHoli
 	return &response.GetHolidays4WebResDTO{
 		HolidaysOrg: result,
 	}, nil
+}
+
+func (s *holidayService) uploadMessages(ctx context.Context, req dto.UploadMessageLanguagesRequest) error {
+	err := s.messageLanguageGateway.UploadMessages(ctx, req)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

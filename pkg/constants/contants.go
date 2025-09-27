@@ -117,4 +117,20 @@ var (
 	UserName       ContextKey = "user_name"
 	UserRoles      ContextKey = "roles"
 	CurrentUserKey ContextKey = "currentUser"
+	AppLanguage    ContextKey = "app_language"
+)
+
+// MessageLangKey defines the key of message language
+type MessageLangKey string
+
+const (
+	HolidayTitleKey MessageLangKey = "title"
+)
+
+// MessageLangType defines the type of message language
+type MessageLangType string
+
+const (
+	HolidayType MessageLangType = "holiday"
+	TermType    MessageLangType = "term"
 )

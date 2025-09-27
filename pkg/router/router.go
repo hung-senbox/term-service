@@ -24,6 +24,7 @@ func SetupRouter(termCollection *mongo.Collection, holidayCollection *mongo.Coll
 	// Gateway setup
 	userGateway := gateway.NewUserGateway("go-main-service", consulClient)
 	orgGateway := gateway.NewOrganizationGateway("go-main-service", consulClient)
+	messageLanguageGW := gateway.NewMessageLanguageGateway("go-main-service", consulClient)
 
 	// Term
 	termRepo := repository.NewTermRepository(termCollection)
@@ -32,7 +33,7 @@ func SetupRouter(termCollection *mongo.Collection, holidayCollection *mongo.Coll
 
 	// Holiday
 	holidayRepo := holiday_repo.NewHolidayRepository(holidayCollection)
-	holidaySvc := holiday_service.NewHolidayService(holidayRepo, userGateway, orgGateway)
+	holidaySvc := holiday_service.NewHolidayService(holidayRepo, userGateway, orgGateway, messageLanguageGW)
 	holidayHandler := holiday_handler.NewHandler(holidaySvc)
 
 	// Register routes
