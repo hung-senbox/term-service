@@ -30,6 +30,7 @@ func main() {
 
 	// logger.WriteLogData("info", map[string]any{"id": 123, "name": "Hung"})
 
+	log.Fatal("Test CI/CD, running...")
 	//logger
 	logger, err := zap.New(cfg)
 	if err != nil {
