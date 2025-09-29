@@ -143,7 +143,7 @@ func (s *termService) GetCurrentTerm(ctx context.Context) (response.CurrentTermR
 		return response.CurrentTermResDTO{}, fmt.Errorf("no current term found")
 	}
 
-	return mappers.MapTermToCurrentResDTO(term), nil
+	return mappers.MapTermToCurrentResDTO(term, ""), nil
 }
 
 func (s *termService) GetCurrentTermByOrg(ctx context.Context, organizationID string) (response.CurrentTermResDTO, error) {
@@ -164,7 +164,7 @@ func (s *termService) GetCurrentTermByOrg(ctx context.Context, organizationID st
 		return response.CurrentTermResDTO{}, fmt.Errorf("no current term found")
 	}
 
-	return mappers.MapTermToCurrentResDTO(term), nil
+	return mappers.MapTermToCurrentResDTO(term, ""), nil
 }
 
 func (s *termService) UploadTerms(ctx context.Context, req request.UploadTermRequest) error {
@@ -290,7 +290,16 @@ func (s *termService) GetTermsByStudent(ctx context.Context, studentID string) (
 		return []response.TermsByStudentResDTO{}, nil
 	}
 
-	return mappers.MapTermsByStudentToResDTO(terms), nil
+	// get word by orgID
+	msg, _ := s.messageLanguageGateway.GetMessageLanguage(ctx, "term", student.OrganizationID)
+	word := ""
+	if msg.Contents != nil {
+		if val, ok := msg.Contents["word"]; ok {
+			word = val
+		}
+	}
+
+	return mappers.MapTermsByStudentToResDTO(terms, word), nil
 }
 
 func (s *termService) GetTerms4App(ctx context.Context, organizationID string) (*response.GetTerms4AppResDTO, error) {
@@ -299,8 +308,17 @@ func (s *termService) GetTerms4App(ctx context.Context, organizationID string) (
 		return nil, fmt.Errorf("get terms by orgID failed: %w", err)
 	}
 
+	// get word by orgID
+	msg, _ := s.messageLanguageGateway.GetMessageLanguage(ctx, "term", organizationID)
+	word := ""
+	if msg.Contents != nil {
+		if val, ok := msg.Contents["word"]; ok {
+			word = val
+		}
+	}
+
 	return &response.GetTerms4AppResDTO{
-		Terms: mappers.MapTermListToCurrentResDTO(terms),
+		Terms: mappers.MapTermListToCurrentResDTO(terms, word),
 	}, nil
 }
 

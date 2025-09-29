@@ -30,7 +30,7 @@ func MapTermListToResDTO(terms []*model.Term) []response.TermResDTO {
 	return result
 }
 
-func MapTermToCurrentResDTO(term *model.Term) response.CurrentTermResDTO {
+func MapTermToCurrentResDTO(term *model.Term, word string) response.CurrentTermResDTO {
 	layout := "2006-01-02"
 	now := time.Now().In(term.EndDate.Location())
 
@@ -44,7 +44,7 @@ func MapTermToCurrentResDTO(term *model.Term) response.CurrentTermResDTO {
 
 	return response.CurrentTermResDTO{
 		ID:           term.ID.Hex(),
-		Title:        term.Title,
+		Title:        word + " " + term.Title,
 		Color:        term.Color,
 		StartDate:    term.StartDate.Format(layout),
 		EndDate:      term.EndDate.Format(layout),
@@ -87,19 +87,19 @@ func calculateCurrentWeek(start, end, now time.Time) int {
 	return (daysPassed / 7) + 1
 }
 
-func MapTermsByStudentToResDTO(terms []*model.Term) []response.TermsByStudentResDTO {
+func MapTermsByStudentToResDTO(terms []*model.Term, word string) []response.TermsByStudentResDTO {
 	result := make([]response.TermsByStudentResDTO, 0, len(terms))
 	for _, term := range terms {
 		result = append(result, response.TermsByStudentResDTO{
 			ID:    term.ID.Hex(),
-			Title: term.Title,
+			Title: word + " " + term.Title,
 			Color: term.Color,
 		})
 	}
 	return result
 }
 
-func MapTermListToCurrentResDTO(terms []*model.Term) []response.CurrentTermResDTO {
+func MapTermListToCurrentResDTO(terms []*model.Term, word string) []response.CurrentTermResDTO {
 	if terms == nil {
 		return []response.CurrentTermResDTO{}
 	}
@@ -107,7 +107,7 @@ func MapTermListToCurrentResDTO(terms []*model.Term) []response.CurrentTermResDT
 	res := make([]response.CurrentTermResDTO, 0, len(terms))
 	for _, t := range terms {
 		if t != nil {
-			res = append(res, MapTermToCurrentResDTO(t))
+			res = append(res, MapTermToCurrentResDTO(t, word))
 		}
 	}
 	return res
