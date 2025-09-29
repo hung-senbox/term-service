@@ -1,0 +1,81 @@
+name: Deploy Golang App to EC2
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: 
+    inputs:
+      service_name:
+        description: 'Service name to deploy (leave empty for all)'
+        required: false
+        default: 'term-service'  # Tên service mặc định
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@v0.1.6
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.KEY }}
+        port: ${{ secrets.PORT }}
+        script: |
+          echo "🚀 Starting deployment..."
+          cd /home/ubuntu/app/term-service
+
+          git pull origin main
+          # Di chuyển tới thư mục project
+          cd /home/ubuntu/app/senbox-volumes
+          
+          # Pull code mới từ GitHub
+          echo "📥 Pulling latest code..."
+          git pull origin main
+          
+          # Xác định service cần deploy
+          SERVICE_NAME="${{ github.event.inputs.service_name || 'term-service' }}"
+          echo "🎯 Deploying service: $SERVICE_NAME"
+          
+          # Dừng service cụ thể
+          echo "🛑 Stopping service: $SERVICE_NAME"
+          docker compose stop $SERVICE_NAME || true
+          docker compose rm -f $SERVICE_NAME || true
+          
+          # Xóa image cũ của service này
+          echo "🧹 Cleaning up old image for $SERVICE_NAME..."
+          docker image rm senbox-volumes-${SERVICE_NAME} || true
+          docker image prune -f || true
+          
+          # Build và start lại service cụ thể
+          echo "🏗️ Building and starting service: $SERVICE_NAME"
+          docker compose up -d --build $SERVICE_NAME
+          
+          # Chờ service khởi động
+          echo "⏳ Waiting for service to start..."
+          sleep 15
+          
+          # Kiểm tra status của service cụ thể
+          echo "✅ Checking service status..."
+          docker compose ps $SERVICE_NAME
+          
+          # Kiểm tra logs nếu service fail
+          if ! docker compose ps $SERVICE_NAME | grep -q "Up"; then
+            echo "❌ Service failed to start, checking logs:"
+            docker compose logs --tail=20 $SERVICE_NAME
+            exit 1
+          fi
+          
+          echo "🎉 Service $SERVICE_NAME deployed successfully!"
+          
+    - name: Notify success
+      if: success()
+      run: echo "✅ Deployment to EC2 successful!"
+      
+    - name: Notify failure
+      if: failure()
+      run: echo "❌ Deployment to EC2 failed!"
