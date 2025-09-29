@@ -145,7 +145,7 @@ func (s *holidayService) GetHolidays4Web(ctx context.Context) (*response.GetHoli
 		return nil, fmt.Errorf("get current user info failed: %w", err)
 	}
 
-	var result []response.HolidaysByOrgRes
+	var result = make([]response.HolidaysByOrgRes, 0)
 
 	// if is super admin return []
 	if currentUser.IsSuperAdmin {
