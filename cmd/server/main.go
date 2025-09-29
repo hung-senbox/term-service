@@ -53,7 +53,6 @@ func main() {
 	if err := r.Run(":" + port); err != nil {
 		log.Fatal("Failed to run server:", err)
 	}
-	log.Fatal("Failed to run server:", err)
 }
 
 func waitPassing(cli *consulapi.Client, name string, timeout time.Duration) error {
