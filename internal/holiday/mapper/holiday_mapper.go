@@ -9,7 +9,6 @@ import (
 func MapHolidayToResDTO(holiday *model.Holiday) response.HolidayResDTO {
 	return response.HolidayResDTO{
 		ID:               holiday.ID.Hex(),
-		Title:            holiday.Title,
 		Color:            holiday.Color,
 		PublishedMobile:  holiday.PublishedMobile,
 		PublishedDesktop: holiday.PublishedDesktop,

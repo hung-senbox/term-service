@@ -4,7 +4,6 @@ import "term-service/internal/gateway/dto"
 
 type HolidayResDTO struct {
 	ID               string                        `json:"id"`
-	Title            string                        `json:"title"`
 	Color            string                        `json:"color"`
 	PublishedMobile  bool                          `json:"published_mobile"`
 	PublishedDesktop bool                          `json:"published_desktop"`
