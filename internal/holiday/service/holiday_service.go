@@ -147,34 +147,39 @@ func (s *holidayService) GetHolidays4Web(ctx context.Context) (*response.GetHoli
 
 	var result []response.HolidaysByOrgRes
 
+	// if is super admin return []
 	if currentUser.IsSuperAdmin {
-		// Lấy toàn bộ org từ Gateway
-		orgs, err := s.orgGateway.GetAllOrg(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("get all organizations failed: %w", err)
-		}
+		// // Lấy toàn bộ org từ Gateway
+		// orgs, err := s.orgGateway.GetAllOrg(ctx)
+		// if err != nil {
+		// 	return nil, fmt.Errorf("get all organizations failed: %w", err)
+		// }
 
-		for _, org := range orgs {
-			holidays, err := s.repo.GetAllByOrgID(ctx, org.ID)
-			if err != nil {
-				return nil, fmt.Errorf("get holidays by orgID %s failed: %w", org.ID, err)
-			}
-			holidayDTOs := mapper.MapHolidayListToResDTO(holidays)
+		// for _, org := range orgs {
+		// 	holidays, err := s.repo.GetAllByOrgID(ctx, org.ID)
+		// 	if err != nil {
+		// 		return nil, fmt.Errorf("get holidays by orgID %s failed: %w", org.ID, err)
+		// 	}
+		// 	holidayDTOs := mapper.MapHolidayListToResDTO(holidays)
 
-			// --- bổ sung message languages ---
-			for i := range holidayDTOs {
-				msgLangs, _ := s.messageLanguageGateway.GetMessageLanguages(ctx, "holiday", holidayDTOs[i].ID)
-				if msgLangs == nil {
-					msgLangs = []dto.MessageLanguageResponse{}
-				}
-				holidayDTOs[i].MessageLanguages = msgLangs
-			}
+		// 	// --- bổ sung message languages ---
+		// 	for i := range holidayDTOs {
+		// 		msgLangs, _ := s.messageLanguageGateway.GetMessageLanguages(ctx, "holiday", holidayDTOs[i].ID)
+		// 		if msgLangs == nil {
+		// 			msgLangs = []dto.MessageLanguageResponse{}
+		// 		}
+		// 		holidayDTOs[i].MessageLanguages = msgLangs
+		// 	}
 
-			result = append(result, response.HolidaysByOrgRes{
-				OrganizationName: org.OrganizationName,
-				Holidays:         holidayDTOs,
-			})
-		}
+		// 	result = append(result, response.HolidaysByOrgRes{
+		// 		OrganizationName: org.OrganizationName,
+		// 		Holidays:         holidayDTOs,
+		// 	})
+		// }
+
+		return &response.GetHolidays4WebResDTO{
+			HolidaysOrg: result,
+		}, nil
 
 	} else if currentUser.OrganizationAdmin.ID != "" {
 		// User là org admin → chỉ lấy org của mình
