@@ -31,6 +31,7 @@ type TermService interface {
 	GetTermsByStudent(ctx context.Context, studentID string) ([]response.TermsByStudentResDTO, error)
 	GetCurrentTermByOrg(ctx context.Context, organizationID string) (response.CurrentTermResDTO, error)
 	GetTerms4App(ctx context.Context, organizationID string) (*response.GetTerms4AppResDTO, error)
+	GetTerm4Gw(ctx context.Context, termId string) (*response.Term4GwResponse, error)
 }
 
 type termService struct {
@@ -330,4 +331,12 @@ func (s *termService) uploadMessages(ctx context.Context, req dto.UploadMessageL
 	}
 
 	return nil
+}
+
+func (s *termService) GetTerm4Gw(ctx context.Context, termId string) (*response.Term4GwResponse, error) {
+	term, err := s.repo.GetByID(ctx, termId)
+	if err != nil {
+		return nil, fmt.Errorf("get term by id failed: %w", err)
+	}
+	return mappers.MapTermToRes4GwResponse(term), nil
 }

@@ -162,3 +162,17 @@ func (h *TermHandler) GetTerms4App(c *gin.Context) {
 
 	helper.SendSuccess(c, http.StatusOK, "Success", terms.Terms)
 }
+
+func (h *TermHandler) GetTerm4Gw(c *gin.Context) {
+	termID := c.Param("term_id")
+	if termID == "" {
+		helper.SendError(c, http.StatusBadRequest, fmt.Errorf("missing term_id in"), helper.ErrInvalidOperation)
+		return
+	}
+	res, err := h.service.GetTerm4Gw(c.Request.Context(), termID)
+	if err != nil {
+		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
+		return
+	}
+	helper.SendSuccess(c, http.StatusOK, "Success", res)
+}

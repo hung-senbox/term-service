@@ -38,4 +38,15 @@ func RegisterTermRoutes(r *gin.Engine, h *handler.TermHandler) {
 			termsUser.GET("/student/:student_id", h.GetTermsByStudent)
 		}
 	}
+
+	// gw routes
+	gatewayGroup := r.Group("/api/v1")
+	gatewayGroup.Use(middleware.Secured())
+	{
+		termsGateway := gatewayGroup.Group("/terms")
+		{
+			termsGateway.GET("/:term_id", h.GetTerm4Gw)
+		}
+	}
+
 }
