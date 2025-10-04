@@ -40,7 +40,7 @@ func RegisterTermRoutes(r *gin.Engine, h *handler.TermHandler) {
 	}
 
 	// gw routes
-	gatewayGroup := r.Group("/api/v1")
+	gatewayGroup := r.Group("/api/v1/gateway")
 	gatewayGroup.Use(middleware.Secured())
 	{
 		termsGateway := gatewayGroup.Group("/terms")
