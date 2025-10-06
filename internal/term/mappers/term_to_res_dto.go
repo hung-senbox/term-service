@@ -113,9 +113,10 @@ func MapTermListToCurrentResDTO(terms []*model.Term, word string) []response.Cur
 	return res
 }
 
-func MapTermToRes4GwResponse(term *model.Term) *response.Term4GwResponse {
+func MapTermToRes4GwResponse(term *model.Term, word string) *response.Term4GwResponse {
 	return &response.Term4GwResponse{
 		ID:        term.ID.Hex(),
+		Title:     word + " " + term.Title,
 		StartDate: helper.FormatDate(term.StartDate),
 		EndDate:   helper.FormatDate(term.EndDate),
 	}

@@ -11,7 +11,6 @@ import (
 	"term-service/internal/term/mappers"
 	"term-service/internal/term/model"
 	"term-service/internal/term/repository"
-	"term-service/pkg/helper"
 	pkg_helpder "term-service/pkg/helper"
 	"time"
 
@@ -222,7 +221,7 @@ func (s *termService) UploadTerms(ctx context.Context, req request.UploadTermReq
 			}
 
 			// goi messs lang gw upload message
-			err = s.uploadMessages(ctx, helper.BuildTermMessagesUpload(organizationAdminID, req, req.LanguageID))
+			err = s.uploadMessages(ctx, pkg_helpder.BuildTermMessagesUpload(organizationAdminID, req, req.LanguageID))
 			if err != nil {
 				return fmt.Errorf("upload department messages failed")
 			}
@@ -248,7 +247,7 @@ func (s *termService) UploadTerms(ctx context.Context, req request.UploadTermReq
 				return fmt.Errorf("failed to create term %s: %w", t.Title, err)
 			}
 
-			err = s.uploadMessages(ctx, helper.BuildTermMessagesUpload(organizationAdminID, req, req.LanguageID))
+			err = s.uploadMessages(ctx, pkg_helpder.BuildTermMessagesUpload(organizationAdminID, req, req.LanguageID))
 			if err != nil {
 				return fmt.Errorf("upload department messages failed")
 			}
@@ -334,9 +333,25 @@ func (s *termService) uploadMessages(ctx context.Context, req dto.UploadMessageL
 }
 
 func (s *termService) GetTerm4Gw(ctx context.Context, termId string) (*response.Term4GwResponse, error) {
+	// get organization admin from user context
+	currentUser, err := s.userGateway.GetCurrentUser(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get current user info failed")
+	}
+
 	term, err := s.repo.GetByID(ctx, termId)
 	if err != nil {
 		return nil, fmt.Errorf("get term by id failed: %w", err)
 	}
-	return mappers.MapTermToRes4GwResponse(term), nil
+
+	// get word by orgID
+	msg, _ := s.messageLanguageGateway.GetMessageLanguage(ctx, "term", currentUser.OrganizationAdmin.ID)
+	word := ""
+	if msg.Contents != nil {
+		if val, ok := msg.Contents["word"]; ok {
+			word = val
+		}
+	}
+
+	return mappers.MapTermToRes4GwResponse(term, word), nil
 }
