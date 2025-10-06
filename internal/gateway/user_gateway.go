@@ -7,6 +7,7 @@ import (
 	"term-service/internal/gateway/dto"
 	"term-service/logger"
 	"term-service/pkg/constants"
+	"term-service/pkg/helper"
 
 	"github.com/hashicorp/consul/api"
 )
@@ -47,7 +48,9 @@ func (g *userGatewayImpl) GetAuthorInfo(ctx context.Context, userID string) (*Us
 		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
 	}
 
-	resp, err := client.Call("GET", "/v1/user/"+userID, nil)
+	headers := helper.GetHeaders(ctx)
+
+	resp, err := client.Call("GET", "/v1/user/"+userID, nil, headers)
 	if err != nil {
 		return nil, fmt.Errorf("Call API user fail: %w", err)
 	}
@@ -76,7 +79,9 @@ func (g *userGatewayImpl) GetCurrentUser(ctx context.Context) (*dto.CurrentUser,
 		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
 	}
 
-	resp, err := client.Call("GET", "/v1/user/current-user", nil)
+	headers := helper.GetHeaders(ctx)
+
+	resp, err := client.Call("GET", "/v1/user/current-user", nil, headers)
 	if err != nil {
 		logger.WriteLogEx("error", "call API user fail", map[string]any{
 			"error": err.Error(),
@@ -116,7 +121,9 @@ func (g *userGatewayImpl) GetStudentInfo(ctx context.Context, studentID string) 
 		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
 	}
 
-	resp, err := client.Call("GET", "/v1/gateway/students/"+studentID, nil)
+	headers := helper.GetHeaders(ctx)
+
+	resp, err := client.Call("GET", "/v1/gateway/students/"+studentID, nil, headers)
 	if err != nil {
 		return nil, fmt.Errorf("call API student fail: %w", err)
 	}

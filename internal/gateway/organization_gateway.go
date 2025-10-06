@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"term-service/internal/gateway/dto"
 	"term-service/pkg/constants"
+	"term-service/pkg/helper"
 
 	"github.com/hashicorp/consul/api"
 )
@@ -38,7 +39,9 @@ func (g *organizationGatewayImpl) GetOrganizationInfo(ctx context.Context, organ
 		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
 	}
 
-	resp, err := client.Call("GET", "/v1/organization/"+organizationID, nil)
+	headers := helper.GetHeaders(ctx)
+
+	resp, err := client.Call("GET", "/v1/organization/"+organizationID, nil, headers)
 	if err != nil {
 		return nil, fmt.Errorf("call API get info organization fail: %w", err)
 	}
@@ -68,7 +71,9 @@ func (g *organizationGatewayImpl) GetAllOrg(ctx context.Context) ([]dto.Organiza
 		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
 	}
 
-	resp, err := client.Call("GET", "/v1/gateway/organizations", nil)
+	headers := helper.GetHeaders(ctx)
+
+	resp, err := client.Call("GET", "/v1/gateway/organizations", nil, headers)
 	if err != nil {
 		return nil, fmt.Errorf("call API get all organization fail: %w", err)
 	}

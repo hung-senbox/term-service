@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"term-service/internal/gateway/dto"
 	"term-service/pkg/constants"
+	"term-service/pkg/helper"
 
 	"github.com/hashicorp/consul/api"
 )
@@ -41,7 +42,9 @@ func (g *messageLanguageGateway) UploadMessage(ctx context.Context, req dto.Uplo
 		return err
 	}
 
-	_, err = client.Call("POST", "/v1/gateway/messages", req)
+	headers := helper.GetHeaders(ctx)
+
+	_, err = client.Call("POST", "/v1/gateway/messages", req, headers)
 	if err != nil {
 		return err
 	}
@@ -60,7 +63,9 @@ func (g *messageLanguageGateway) UploadMessages(ctx context.Context, req dto.Upl
 		return err
 	}
 
-	_, err = client.Call("POST", "/v1/gateway/messages", req)
+	headers := helper.GetHeaders(ctx)
+
+	_, err = client.Call("POST", "/v1/gateway/messages", req, headers)
 	if err != nil {
 		return err
 	}
@@ -81,9 +86,11 @@ func (g *messageLanguageGateway) GetMessageLanguages(ctx context.Context, typeSt
 		return nil, err
 	}
 
+	headers := helper.GetHeaders(ctx)
+
 	// gọi API với query params
 	url := fmt.Sprintf("/v1/gateway/messages?type=%s&type_id=%s", typeStr, typeID)
-	resp, err := client.Call("GET", url, nil)
+	resp, err := client.Call("GET", url, nil, headers)
 	if err != nil {
 		return nil, err
 	}
@@ -120,9 +127,11 @@ func (g *messageLanguageGateway) GetMessageLanguage(ctx context.Context, typeStr
 		return dto.MessageLanguageResponse{}, err
 	}
 
+	headers := helper.GetHeaders(ctx)
+
 	// gọi API với query params
 	url := fmt.Sprintf("/v1/gateway/messages/get-by-language?type=%s&type_id=%s&language_id=%d", typeStr, typeID, appLanguage)
-	resp, err := client.Call("GET", url, nil)
+	resp, err := client.Call("GET", url, nil, headers)
 	if err != nil {
 		return dto.MessageLanguageResponse{}, err
 	}
@@ -154,9 +163,11 @@ func (g *messageLanguageGateway) DeleleByTypeAndTypeID(ctx context.Context, type
 		return err
 	}
 
+	headers := helper.GetHeaders(ctx)
+
 	// gọi API với query params
 	url := fmt.Sprintf("/v1/gateway/messages?type=%s&type_id=%s", typeStr, typeID)
-	_, err = client.Call("DELETE", url, nil)
+	_, err = client.Call("DELETE", url, nil, headers)
 	if err != nil {
 		return err
 	}
