@@ -106,6 +106,9 @@ func MapTermListToCurrentResDTO(terms []*model.Term, word string) []response.Cur
 
 	res := make([]response.CurrentTermResDTO, 0, len(terms))
 	for _, t := range terms {
+		if !t.PublishedMobile {
+			continue
+		}
 		if t != nil {
 			res = append(res, MapTermToCurrentResDTO(t, word))
 		}
@@ -120,4 +123,19 @@ func MapTermToRes4GwResponse(term *model.Term, word string) *response.Term4GwRes
 		StartDate: helper.FormatDate(term.StartDate),
 		EndDate:   helper.FormatDate(term.EndDate),
 	}
+}
+
+func MapTermsByToRes4App(terms []*model.Term, word string) []response.TermResponse4App {
+	result := make([]response.TermResponse4App, 0, len(terms))
+	for _, term := range terms {
+		if !term.PublishedTeacher {
+			continue
+		}
+		result = append(result, response.TermResponse4App{
+			ID:    term.ID.Hex(),
+			Title: word + " " + term.Title,
+			Color: term.Color,
+		})
+	}
+	return result
 }

@@ -18,3 +18,9 @@ type TermsByStudentResDTO struct {
 	Title string `json:"title"`
 	Color string `json:"color"`
 }
+
+type TermResponse4App struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+	Color string `json:"color"`
+}

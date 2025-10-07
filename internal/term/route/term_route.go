@@ -36,6 +36,7 @@ func RegisterTermRoutes(r *gin.Engine, h *handler.TermHandler) {
 			termsUser.GET("", h.GetTerms4App)
 			termsUser.GET("/current", h.GetCurrentTerm)
 			termsUser.GET("/student/:student_id", h.GetTermsByStudent)
+			termsUser.GET("/organization/:organization_id", h.GetTermsByOrg4App)
 		}
 	}
 
