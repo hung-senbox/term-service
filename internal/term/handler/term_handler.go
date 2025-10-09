@@ -192,3 +192,22 @@ func (h *TermHandler) GetTermsByOrg4App(c *gin.Context) {
 
 	helper.SendSuccess(c, http.StatusOK, "Success", terms)
 }
+
+func (h *TermHandler) GetPreviousTerm4GW(c *gin.Context) {
+	termID := c.Param("term_id")
+	if termID == "" {
+		helper.SendError(c, http.StatusBadRequest, fmt.Errorf("missing term_id in"), helper.ErrInvalidOperation)
+		return
+	}
+	organizationID := c.Query("organization_id")
+	if organizationID == "" {
+		helper.SendError(c, http.StatusBadRequest, fmt.Errorf("missing organization_id in"), helper.ErrInvalidOperation)
+		return
+	}
+	res, err := h.service.GetPreviousTerm4GW(c.Request.Context(), organizationID, termID)
+	if err != nil {
+		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
+		return
+	}
+	helper.SendSuccess(c, http.StatusOK, "Success", res)
+}
