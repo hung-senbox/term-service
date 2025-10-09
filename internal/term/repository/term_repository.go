@@ -23,6 +23,7 @@ type TermRepository interface {
 	GetCurrentTermByOrg(ctx context.Context, organizationID string) (*model.Term, error)
 	GetAllByOrgID4App(ctx context.Context, orgID string) ([]*model.Term, error)
 	GetPreviousTerm(ctx context.Context, orgID string, termID string) (*model.Term, error)
+	GetPreviousTerms(ctx context.Context, orgID string, termID string) ([]model.Term, error)
 }
 
 type termRepository struct {
@@ -247,4 +248,46 @@ func (r *termRepository) GetPreviousTerm(ctx context.Context, orgID string, term
 	}
 
 	return &prev, nil
+}
+
+func (r *termRepository) GetPreviousTerms(ctx context.Context, orgID string, termID string) ([]model.Term, error) {
+	// Lấy term hiện tại để biết start_date
+	objectID, err := primitive.ObjectIDFromHex(termID)
+	if err != nil {
+		return nil, err
+	}
+
+	var current model.Term
+	err = r.collection.FindOne(ctx, bson.M{
+		"_id":             objectID,
+		"organization_id": orgID,
+	}).Decode(&current)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	// Lấy tất cả term có start_date < current.StartDate (cũ hơn)
+	filter := bson.M{
+		"organization_id": orgID,
+		"start_date":      bson.M{"$lt": current.StartDate},
+	}
+
+	// Sắp xếp giảm dần theo start_date (gần nhất -> xa nhất)
+	opts := options.Find().SetSort(bson.D{{Key: "start_date", Value: -1}})
+
+	cursor, err := r.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var previousTerms []model.Term
+	if err := cursor.All(ctx, &previousTerms); err != nil {
+		return nil, err
+	}
+
+	return previousTerms, nil
 }

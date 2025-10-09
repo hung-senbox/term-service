@@ -139,3 +139,11 @@ func MapTermsByToRes4App(terms []*model.Term, word string) []response.TermRespon
 	}
 	return result
 }
+
+func MapTermsToRes4GwResponse(term []model.Term, word string) []*response.Term4GwResponse {
+	var res []*response.Term4GwResponse
+	for _, t := range term {
+		res = append(res, MapTermToRes4GwResponse(&t, word))
+	}
+	return res
+}

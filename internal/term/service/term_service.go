@@ -33,6 +33,7 @@ type TermService interface {
 	GetTerm4Gw(ctx context.Context, termId string) (*response.Term4GwResponse, error)
 	GetTermsByOrg4App(ctx context.Context, organizationID string) ([]response.TermResponse4App, error)
 	GetPreviousTerm4GW(ctx context.Context, organizationID string, termID string) (*response.Term4GwResponse, error)
+	GetPreviousTerms4GW(ctx context.Context, organizationID string, termID string) ([]*response.Term4GwResponse, error)
 }
 
 type termService struct {
@@ -404,4 +405,24 @@ func (s *termService) GetPreviousTerm4GW(ctx context.Context, organizationID str
 	}
 
 	return mappers.MapTermToRes4GwResponse(previousTerm, word), nil
+}
+
+func (s *termService) GetPreviousTerms4GW(ctx context.Context, organizationID string, termID string) ([]*response.Term4GwResponse, error) {
+
+	// get terms by orgID
+	previousTerms, err := s.repo.GetPreviousTerms(ctx, organizationID, termID)
+	if err != nil {
+		return nil, fmt.Errorf("get terms by orgID failed: %w", err)
+	}
+
+	// get word by orgID
+	msg, _ := s.messageLanguageGateway.GetMessageLanguage(ctx, "term", organizationID)
+	word := ""
+	if msg.Contents != nil {
+		if val, ok := msg.Contents["word"]; ok {
+			word = val
+		}
+	}
+
+	return mappers.MapTermsToRes4GwResponse(previousTerms, word), nil
 }

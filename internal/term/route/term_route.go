@@ -48,6 +48,7 @@ func RegisterTermRoutes(r *gin.Engine, h *handler.TermHandler) {
 		{
 			termsGateway.GET("/:term_id", h.GetTerm4Gw)
 			termsGateway.GET("/:term_id/previous", h.GetPreviousTerm4GW)
+			termsGateway.GET("/:term_id/previous/get-list", h.GetPreviousTerms4GW)
 		}
 	}
 
