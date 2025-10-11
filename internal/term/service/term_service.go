@@ -362,7 +362,7 @@ func (s *termService) GetTerm4Gw(ctx context.Context, termId string) (*response.
 func (s *termService) GetTermsByOrg4App(ctx context.Context, organizationID string) ([]response.TermResponse4App, error) {
 
 	// get terms by orgID
-	terms, err := s.repo.GetAllByOrgID4App(ctx, organizationID)
+	terms, err := s.repo.GetAllByOrgIDIsPublishedTeacher4App(ctx, organizationID)
 	if err != nil {
 		return nil, fmt.Errorf("get terms by orgID failed: %w", err)
 	}
