@@ -230,3 +230,13 @@ func (h *TermHandler) GetPreviousTerms4GW(c *gin.Context) {
 	}
 	helper.SendSuccess(c, http.StatusOK, "Success", res)
 }
+
+func (h *TermHandler) GetTerms2Assign4Web(c *gin.Context) {
+
+	res, err := h.service.GetTerms2Assign4Web(c.Request.Context())
+	if err != nil {
+		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
+		return
+	}
+	helper.SendSuccess(c, http.StatusOK, "Success", res)
+}

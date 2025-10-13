@@ -17,6 +17,7 @@ func RegisterTermRoutes(r *gin.Engine, h *handler.TermHandler) {
 			termsAdmin.POST("", h.UploadTerm)
 			termsAdmin.GET("", h.GetTerms4Web)
 			termsAdmin.GET("/student/:student_id", h.GetTermsByStudent)
+			termsAdmin.GET("/assign", h.GetTerms2Assign4Web)
 		}
 	}
 

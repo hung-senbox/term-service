@@ -34,6 +34,7 @@ type TermService interface {
 	GetTermsByOrg4App(ctx context.Context, organizationID string) ([]response.TermResponse4App, error)
 	GetPreviousTerm4GW(ctx context.Context, organizationID string, termID string) (*response.Term4GwResponse, error)
 	GetPreviousTerms4GW(ctx context.Context, organizationID string, termID string) ([]*response.Term4GwResponse, error)
+	GetTerms2Assign4Web(ctx context.Context) ([]*response.TermResponse4Web, error)
 }
 
 type termService struct {
@@ -362,7 +363,7 @@ func (s *termService) GetTerm4Gw(ctx context.Context, termId string) (*response.
 func (s *termService) GetTermsByOrg4App(ctx context.Context, organizationID string) ([]response.TermResponse4App, error) {
 
 	// get terms by orgID
-	terms, err := s.repo.GetAllByOrgIDIsPublishedTeacher4App(ctx, organizationID)
+	terms, err := s.repo.GetAllByOrgIDIsPublishedTeacher(ctx, organizationID)
 	if err != nil {
 		return nil, fmt.Errorf("get terms by orgID failed: %w", err)
 	}
@@ -425,4 +426,40 @@ func (s *termService) GetPreviousTerms4GW(ctx context.Context, organizationID st
 	}
 
 	return mappers.MapTermsToRes4GwResponse(previousTerms, word), nil
+}
+
+func (s *termService) GetTerms2Assign4Web(ctx context.Context) ([]*response.TermResponse4Web, error) {
+	// get organization admin from user context
+	currentUser, err := s.userGateway.GetCurrentUser(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get current user info failed")
+	}
+
+	// check is super admin & check org admin
+	if currentUser.IsSuperAdmin || currentUser.OrganizationAdmin.ID == "" {
+		return nil, fmt.Errorf("access denied: super admin cannot perform this action")
+	}
+
+	// get terms by orgID
+	terms, err := s.repo.GetAllByOrgIDIsPublishedDesktop(ctx, currentUser.OrganizationAdmin.ID)
+	if err != nil {
+		return nil, fmt.Errorf("get terms by orgID failed: %w", err)
+	}
+
+	// get word by orgID
+	msg, _ := s.messageLanguageGateway.GetMessageLanguage(ctx, "term", currentUser.OrganizationAdmin.ID)
+	word := ""
+	if msg.Contents != nil {
+		if val, ok := msg.Contents["word"]; ok {
+			word = val
+		}
+	}
+
+	var res = make([]*response.TermResponse4Web, 0, len(terms))
+
+	for _, term := range terms {
+		res = append(res, mappers.MapTermToRes4WebResponse(term, word))
+	}
+
+	return res, nil
 }

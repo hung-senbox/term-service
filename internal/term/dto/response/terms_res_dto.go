@@ -21,10 +21,3 @@ type ListTermsResDTO struct {
 type GetTerms4AppResDTO struct {
 	Terms []CurrentTermResDTO `json:"terms"`
 }
-
-type Term4GwResponse struct {
-	ID        string `json:"id"`
-	Title     string `json:"title"`
-	StartDate string `json:"start_date"`
-	EndDate   string `json:"end_date"`
-}
