@@ -150,7 +150,9 @@ func MapTermsToRes4GwResponse(term []model.Term, word string) []*response.Term4G
 
 func MapTermToRes4WebResponse(term *model.Term, word string) *response.TermResponse4Web {
 	return &response.TermResponse4Web{
-		ID:    term.ID.Hex(),
-		Title: word + " " + term.Title,
+		ID:        term.ID.Hex(),
+		Title:     word + " " + term.Title,
+		StartDate: helper.FormatDate(term.StartDate),
+		EndDate:   helper.FormatDate(term.EndDate),
 	}
 }

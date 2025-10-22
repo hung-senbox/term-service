@@ -16,7 +16,7 @@ func RegisterTermRoutes(r *gin.Engine, h *handler.TermHandler) {
 		{
 			termsAdmin.POST("", h.UploadTerm)
 			termsAdmin.GET("", h.GetTerms4Web)
-			termsAdmin.GET("/student/:student_id", h.GetTermsByStudent)
+			termsAdmin.GET("/student/:student_id", h.GetTermsByStudent4Web)
 			termsAdmin.GET("/assign", h.GetTerms2Assign4Web)
 		}
 	}
@@ -36,7 +36,7 @@ func RegisterTermRoutes(r *gin.Engine, h *handler.TermHandler) {
 		{
 			termsUser.GET("", h.GetTerms4App)
 			termsUser.GET("/current", h.GetCurrentTerm)
-			termsUser.GET("/student/:student_id", h.GetTermsByStudent)
+			termsUser.GET("/student/:student_id", h.GetTermsByStudent4App)
 			termsUser.GET("/organization/:organization_id", h.GetTermsByOrg4App)
 		}
 	}

@@ -22,6 +22,7 @@ type TermRepository interface {
 	GetAllByOrgID(ctx context.Context, orgID string) ([]*model.Term, error)
 	GetCurrentTermByOrg(ctx context.Context, organizationID string) (*model.Term, error)
 	GetAllByOrgID4App(ctx context.Context, orgID string) ([]*model.Term, error)
+	GetAllByOrgID4Web(ctx context.Context, orgID string) ([]*model.Term, error)
 	GetAllByOrgIDIsPublishedTeacher(ctx context.Context, orgID string) ([]*model.Term, error)
 	GetPreviousTerm(ctx context.Context, orgID string, termID string) (*model.Term, error)
 	GetPreviousTerms(ctx context.Context, orgID string, termID string) ([]model.Term, error)
@@ -180,7 +181,9 @@ func (r *termRepository) GetAllByOrgID(ctx context.Context, orgID string) ([]*mo
 		"organization_id": orgID,
 	}
 
-	cur, err := r.collection.Find(ctx, filter)
+	opts := options.Find().SetSort(bson.D{{Key: "start_date", Value: 1}})
+
+	cur, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -198,6 +201,29 @@ func (r *termRepository) GetAllByOrgID4App(ctx context.Context, orgID string) ([
 	filter := bson.M{
 		"organization_id":  orgID,
 		"published_mobile": true,
+	}
+
+	// sort theo created_at ASC
+	findOptions := options.Find().SetSort(bson.D{{Key: "created_at", Value: 1}})
+
+	cur, err := r.collection.Find(ctx, filter, findOptions)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	var terms []*model.Term
+	if err := cur.All(ctx, &terms); err != nil {
+		return nil, err
+	}
+
+	return terms, nil
+}
+
+func (r *termRepository) GetAllByOrgID4Web(ctx context.Context, orgID string) ([]*model.Term, error) {
+	filter := bson.M{
+		"organization_id":   orgID,
+		"published_desktop": true,
 	}
 
 	// sort theo created_at ASC

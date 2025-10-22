@@ -27,7 +27,8 @@ type TermService interface {
 	GetCurrentTerm(ctx context.Context) (response.CurrentTermResDTO, error)
 	UploadTerms(ctx context.Context, req request.UploadTermRequest) error
 	GetTermsByOrgID(ctx context.Context, orgID string) (*response.ListTermsResDTO, error)
-	GetTermsByStudent(ctx context.Context, studentID string) ([]response.TermsByStudentResDTO, error)
+	GetTermsByStudent4App(ctx context.Context, studentID string) ([]response.TermsByStudentResDTO, error)
+	GetTermsByStudent4Web(ctx context.Context, studentID string) ([]response.TermsByStudentResDTO, error)
 	GetCurrentTermByOrg(ctx context.Context, organizationID string) (response.CurrentTermResDTO, error)
 	GetTerms4App(ctx context.Context, organizationID string) (*response.GetTerms4AppResDTO, error)
 	GetTerm4Gw(ctx context.Context, termId string) (*response.Term4GwResponse, error)
@@ -277,7 +278,7 @@ func (s *termService) GetTermsByOrgID(ctx context.Context, orgID string) (*respo
 	}, nil
 }
 
-func (s *termService) GetTermsByStudent(ctx context.Context, studentID string) ([]response.TermsByStudentResDTO, error) {
+func (s *termService) GetTermsByStudent4App(ctx context.Context, studentID string) ([]response.TermsByStudentResDTO, error) {
 	// get student info
 	student, err := s.userGateway.GetStudentInfo(ctx, studentID)
 	if err != nil {
@@ -286,6 +287,35 @@ func (s *termService) GetTermsByStudent(ctx context.Context, studentID string) (
 
 	// get terms by orgID
 	terms, err := s.repo.GetAllByOrgID4App(ctx, student.OrganizationID)
+	if err != nil {
+		return nil, fmt.Errorf("get terms by orgID failed: %w", err)
+	}
+
+	if len(terms) == 0 {
+		return []response.TermsByStudentResDTO{}, nil
+	}
+
+	// get word by orgID
+	msg, _ := s.messageLanguageGateway.GetMessageLanguage(ctx, "term", student.OrganizationID)
+	word := ""
+	if msg.Contents != nil {
+		if val, ok := msg.Contents["word"]; ok {
+			word = val
+		}
+	}
+
+	return mappers.MapTermsByStudentToResDTO(terms, word), nil
+}
+
+func (s *termService) GetTermsByStudent4Web(ctx context.Context, studentID string) ([]response.TermsByStudentResDTO, error) {
+	// get student info
+	student, err := s.userGateway.GetStudentInfo(ctx, studentID)
+	if err != nil {
+		return nil, fmt.Errorf("get student info failed: %w", err)
+	}
+
+	// get terms by orgID
+	terms, err := s.repo.GetAllByOrgID4Web(ctx, student.OrganizationID)
 	if err != nil {
 		return nil, fmt.Errorf("get terms by orgID failed: %w", err)
 	}
