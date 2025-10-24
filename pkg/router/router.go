@@ -45,8 +45,8 @@ func SetupRouter(consulClient *api.Client, cacheClient *goredis.Client, termColl
 	holidayHandler := holiday_handler.NewHandler(holidaySvc)
 
 	// Register routes
-	route.RegisterTermRoutes(r, termHandler)
-	holiday_route.RegisterHolidayRoutes(r, holidayHandler)
+	route.RegisterTermRoutes(r, termHandler, userGateway)
+	holiday_route.RegisterHolidayRoutes(r, holidayHandler, userGateway)
 
 	return r
 }

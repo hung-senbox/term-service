@@ -1,16 +1,17 @@
 package route
 
 import (
+	"term-service/internal/gateway"
 	"term-service/internal/term/handler"
 	"term-service/internal/term/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterTermRoutes(r *gin.Engine, h *handler.TermHandler) {
+func RegisterTermRoutes(r *gin.Engine, h *handler.TermHandler, userGw gateway.UserGateway) {
 	// Admin routes
 	adminGroup := r.Group("/api/v1/admin")
-	adminGroup.Use(middleware.Secured())
+	adminGroup.Use(middleware.Secured(userGw))
 	{
 		termsAdmin := adminGroup.Group("/terms")
 		{
@@ -23,14 +24,14 @@ func RegisterTermRoutes(r *gin.Engine, h *handler.TermHandler) {
 
 	// Organization routes
 	orgGroup := r.Group("/api/v1/organization")
-	orgGroup.Use(middleware.Secured())
+	orgGroup.Use(middleware.Secured(userGw))
 	{
 		orgGroup.GET("/:organization_id/terms", h.GetTermsByOrgID)
 	}
 
 	// User routes
 	userGroup := r.Group("/api/v1")
-	userGroup.Use(middleware.Secured())
+	userGroup.Use(middleware.Secured(userGw))
 	{
 		termsUser := userGroup.Group("/terms")
 		{
@@ -43,7 +44,7 @@ func RegisterTermRoutes(r *gin.Engine, h *handler.TermHandler) {
 
 	// gw routes
 	gatewayGroup := r.Group("/api/v1/gateway")
-	gatewayGroup.Use(middleware.Secured())
+	gatewayGroup.Use(middleware.Secured(userGw))
 	{
 		termsGateway := gatewayGroup.Group("/terms")
 		{

@@ -12,6 +12,7 @@ import (
 	"term-service/internal/term/mappers"
 	"term-service/internal/term/model"
 	"term-service/internal/term/repository"
+	"term-service/pkg/constants"
 	pkg_helpder "term-service/pkg/helper"
 	"time"
 
@@ -77,10 +78,7 @@ func (s *termService) DeleteTerm(ctx context.Context, id string) error {
 }
 
 func (s *termService) GetTerms4Web(ctx context.Context) (*response.GetTerms4WebResDTO, error) {
-	currentUser, err := s.cachedUserGw.GetCurrentUser(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("get current user info failed: %w", err)
-	}
+	currentUser, _ := ctx.Value(constants.CurrentUserKey).(*gw_response.CurrentUser)
 
 	var result []response.TermsByOrgRes
 
@@ -180,10 +178,7 @@ func (s *termService) GetCurrentTermByOrg(ctx context.Context, organizationID st
 
 func (s *termService) UploadTerms(ctx context.Context, req request.UploadTermRequest) error {
 	// get organization admin from user context
-	currentUser, err := s.cachedUserGw.GetCurrentUser(ctx)
-	if err != nil {
-		return fmt.Errorf("get current user info failed")
-	}
+	currentUser, _ := ctx.Value(constants.CurrentUserKey).(*gw_response.CurrentUser)
 
 	// check is super admin & check org admin
 	if currentUser.IsSuperAdmin || currentUser.OrganizationAdmin.ID == "" {
@@ -374,10 +369,7 @@ func (s *termService) uploadMessages(ctx context.Context, req gw_request.UploadM
 
 func (s *termService) GetTerm4Gw(ctx context.Context, termId string) (*response.Term4GwResponse, error) {
 	// get organization admin from user context
-	currentUser, err := s.cachedUserGw.GetCurrentUser(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("get current user info failed")
-	}
+	currentUser, _ := ctx.Value(constants.CurrentUserKey).(*gw_response.CurrentUser)
 
 	term, err := s.repo.GetByID(ctx, termId)
 	if err != nil {
@@ -466,10 +458,7 @@ func (s *termService) GetPreviousTerms4GW(ctx context.Context, organizationID st
 
 func (s *termService) GetTerms2Assign4Web(ctx context.Context) ([]*response.TermResponse4Web, error) {
 	// get organization admin from user context
-	currentUser, err := s.cachedUserGw.GetCurrentUser(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("get current user info failed")
-	}
+	currentUser, _ := ctx.Value(constants.CurrentUserKey).(*gw_response.CurrentUser)
 
 	// check is super admin & check org admin
 	if currentUser.IsSuperAdmin || currentUser.OrganizationAdmin.ID == "" {

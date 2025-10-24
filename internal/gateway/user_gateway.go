@@ -22,6 +22,7 @@ type UserGateway interface {
 	GetCurrentUser(ctx context.Context) (*response.CurrentUser, error)
 	GetUserByTeacher(ctx context.Context, teacherID string) (*response.CurrentUser, error)
 	GetStudentInfo(ctx context.Context, studentID string) (*response.StudentResponse, error)
+	GetTeacherInfo(ctx context.Context, teacherID string) (*response.TeacherResponse, error)
 	GetTeacherByUserAndOrganization(ctx context.Context, userID, organizationID string) (*response.TeacherResponse, error)
 }
 

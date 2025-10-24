@@ -43,6 +43,26 @@ func (g *CachedUserGateway) GetStudentInfo(ctx context.Context, studentID string
 }
 
 // ==============================
+// === GetTeacherInfo ===
+// ==============================
+func (g *CachedUserGateway) GetTeacherInfo(ctx context.Context, teacherID string) (*gw_response.TeacherResponse, error) {
+	cacheKey := cache.TeacherCacheKey(teacherID)
+
+	var cached gw_response.TeacherResponse
+	if err := g.cache.Get(ctx, cacheKey, &cached); err == nil && cached.ID != "" {
+		return &cached, nil
+	}
+
+	teacher, err := g.inner.GetTeacherInfo(ctx, teacherID)
+	if err != nil {
+		return nil, err
+	}
+
+	_ = g.cache.Set(ctx, cacheKey, teacher, int(g.ttl.Seconds()))
+	return teacher, nil
+}
+
+// ==============================
 // === GetTeacherByUserAndOrganization ===
 // ==============================
 func (g *CachedUserGateway) GetTeacherByUserAndOrganization(ctx context.Context, userID, organizationID string) (*gw_response.TeacherResponse, error) {

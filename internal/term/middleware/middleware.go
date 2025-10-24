@@ -14,7 +14,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func Secured() gin.HandlerFunc {
+func Secured(userGw gateway.UserGateway) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authorizationHeader := c.GetHeader("Authorization")
 
@@ -69,6 +69,25 @@ func Secured() gin.HandlerFunc {
 		ctx = context.WithValue(c.Request.Context(), constants.Token, tokenString)
 		c.Request = c.Request.WithContext(ctx)
 
+		// --- Call user-service to get current user ---
+		currentUser, err := userGw.GetCurrentUser(
+			context.WithValue(ctx, constants.CurrentUserKey, tokenString),
+		)
+		if err != nil {
+			logger.WriteLogEx("error", "failed to get current user", map[string]any{
+				"error": err.Error(),
+			})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"error": "unauthorized",
+			})
+			return
+		}
+
+		// --- Set currentUser vào context ---
+		c.Set(string(constants.CurrentUserKey), currentUser)
+		ctx = context.WithValue(ctx, constants.CurrentUserKey, currentUser)
+		c.Request = c.Request.WithContext(ctx)
+
 		c.Next()
 	}
 }
@@ -104,7 +123,7 @@ func SecuredV2(userGW gateway.UserGateway) gin.HandlerFunc {
 
 		// gọi user-service để lấy current user
 		currentUser, err := userGW.GetCurrentUser(
-			context.WithValue(c.Request.Context(), constants.Token, tokenString),
+			context.WithValue(c.Request.Context(), constants.CurrentUserKey, tokenString),
 		)
 		if err != nil {
 			logger.WriteLogEx("error", "failed to get current user", map[string]any{
