@@ -5,7 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"term-service/internal/gateway"
-	"term-service/internal/gateway/dto"
+	gw_request "term-service/internal/gateway/dto/request"
+	gw_response "term-service/internal/gateway/dto/response"
 	"term-service/internal/term/dto/request"
 	"term-service/internal/term/dto/response"
 	"term-service/internal/term/mappers"
@@ -40,15 +41,20 @@ type TermService interface {
 
 type termService struct {
 	repo                   repository.TermRepository
-	userGateway            gateway.UserGateway
+	cachedUserGw           gateway.UserGateway
 	orgGateway             gateway.OrganizationGateway
 	messageLanguageGateway gateway.MessageLanguageGateway
 }
 
-func NewTermService(repo repository.TermRepository, userGateway gateway.UserGateway, orgGateway gateway.OrganizationGateway, messageLanguageGateway gateway.MessageLanguageGateway) TermService {
+func NewTermService(
+	repo repository.TermRepository,
+	cachedUserGw gateway.UserGateway,
+	orgGateway gateway.OrganizationGateway,
+	messageLanguageGateway gateway.MessageLanguageGateway,
+) TermService {
 	return &termService{
 		repo:                   repo,
-		userGateway:            userGateway,
+		cachedUserGw:           cachedUserGw,
 		orgGateway:             orgGateway,
 		messageLanguageGateway: messageLanguageGateway,
 	}
@@ -71,7 +77,7 @@ func (s *termService) DeleteTerm(ctx context.Context, id string) error {
 }
 
 func (s *termService) GetTerms4Web(ctx context.Context) (*response.GetTerms4WebResDTO, error) {
-	currentUser, err := s.userGateway.GetCurrentUser(ctx)
+	currentUser, err := s.cachedUserGw.GetCurrentUser(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get current user info failed: %w", err)
 	}
@@ -94,7 +100,7 @@ func (s *termService) GetTerms4Web(ctx context.Context) (*response.GetTerms4WebR
 			// --- gọi message language gateway ---
 			msgLangs, _ := s.messageLanguageGateway.GetMessageLanguages(ctx, "term", org.ID)
 			if msgLangs == nil {
-				msgLangs = []dto.MessageLanguageResponse{}
+				msgLangs = []gw_response.MessageLanguageResponse{}
 			}
 
 			result = append(result, response.TermsByOrgRes{
@@ -120,7 +126,7 @@ func (s *termService) GetTerms4Web(ctx context.Context) (*response.GetTerms4WebR
 		// --- gọi message language gateway ---
 		msgLangs, _ := s.messageLanguageGateway.GetMessageLanguages(ctx, "term", orgID)
 		if msgLangs == nil {
-			msgLangs = []dto.MessageLanguageResponse{}
+			msgLangs = []gw_response.MessageLanguageResponse{}
 		}
 
 		result = append(result, response.TermsByOrgRes{
@@ -174,7 +180,7 @@ func (s *termService) GetCurrentTermByOrg(ctx context.Context, organizationID st
 
 func (s *termService) UploadTerms(ctx context.Context, req request.UploadTermRequest) error {
 	// get organization admin from user context
-	currentUser, err := s.userGateway.GetCurrentUser(ctx)
+	currentUser, err := s.cachedUserGw.GetCurrentUser(ctx)
 	if err != nil {
 		return fmt.Errorf("get current user info failed")
 	}
@@ -280,7 +286,7 @@ func (s *termService) GetTermsByOrgID(ctx context.Context, orgID string) (*respo
 
 func (s *termService) GetTermsByStudent4App(ctx context.Context, studentID string) ([]response.TermsByStudentResDTO, error) {
 	// get student info
-	student, err := s.userGateway.GetStudentInfo(ctx, studentID)
+	student, err := s.cachedUserGw.GetStudentInfo(ctx, studentID)
 	if err != nil {
 		return nil, fmt.Errorf("get student info failed: %w", err)
 	}
@@ -309,7 +315,7 @@ func (s *termService) GetTermsByStudent4App(ctx context.Context, studentID strin
 
 func (s *termService) GetTermsByStudent4Web(ctx context.Context, studentID string) ([]response.TermsByStudentResDTO, error) {
 	// get student info
-	student, err := s.userGateway.GetStudentInfo(ctx, studentID)
+	student, err := s.cachedUserGw.GetStudentInfo(ctx, studentID)
 	if err != nil {
 		return nil, fmt.Errorf("get student info failed: %w", err)
 	}
@@ -356,7 +362,7 @@ func (s *termService) GetTerms4App(ctx context.Context, organizationID string) (
 	}, nil
 }
 
-func (s *termService) uploadMessages(ctx context.Context, req dto.UploadMessageLanguagesRequest) error {
+func (s *termService) uploadMessages(ctx context.Context, req gw_request.UploadMessageLanguagesRequest) error {
 	err := s.messageLanguageGateway.UploadMessages(ctx, req)
 
 	if err != nil {
@@ -368,7 +374,7 @@ func (s *termService) uploadMessages(ctx context.Context, req dto.UploadMessageL
 
 func (s *termService) GetTerm4Gw(ctx context.Context, termId string) (*response.Term4GwResponse, error) {
 	// get organization admin from user context
-	currentUser, err := s.userGateway.GetCurrentUser(ctx)
+	currentUser, err := s.cachedUserGw.GetCurrentUser(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get current user info failed")
 	}
@@ -460,7 +466,7 @@ func (s *termService) GetPreviousTerms4GW(ctx context.Context, organizationID st
 
 func (s *termService) GetTerms2Assign4Web(ctx context.Context) ([]*response.TermResponse4Web, error) {
 	// get organization admin from user context
-	currentUser, err := s.userGateway.GetCurrentUser(ctx)
+	currentUser, err := s.cachedUserGw.GetCurrentUser(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get current user info failed")
 	}

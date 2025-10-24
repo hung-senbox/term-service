@@ -4,14 +4,15 @@ import (
 	"context"
 	"strconv"
 	"strings"
-	"term-service/internal/gateway/dto"
+	gw_request "term-service/internal/gateway/dto/request"
+	gw_response "term-service/internal/gateway/dto/response"
 	"term-service/internal/holiday/dto/request"
 	term_request "term-service/internal/term/dto/request"
 	"term-service/pkg/constants"
 )
 
-func CurrentUserFromCtx(ctx context.Context) (*dto.CurrentUser, bool) {
-	if cu, ok := ctx.Value(constants.CurrentUserKey).(*dto.CurrentUser); ok {
+func CurrentUserFromCtx(ctx context.Context) (*gw_response.CurrentUser, bool) {
+	if cu, ok := ctx.Value(constants.CurrentUserKey).(*gw_response.CurrentUser); ok {
 		return cu, true
 	}
 	return nil, false
@@ -25,9 +26,9 @@ func ParseAppLanguage(header string, defaultVal uint) uint {
 	return defaultVal
 }
 
-func BuildHolidayMessagesUpload(holidayID string, req request.UploadHolidayItem, langID uint) dto.UploadMessageLanguagesRequest {
-	return dto.UploadMessageLanguagesRequest{
-		MessageLanguages: []dto.UploadMessageRequest{
+func BuildHolidayMessagesUpload(holidayID string, req request.UploadHolidayItem, langID uint) gw_request.UploadMessageLanguagesRequest {
+	return gw_request.UploadMessageLanguagesRequest{
+		MessageLanguages: []gw_request.UploadMessageRequest{
 			{
 				TypeID:     holidayID,
 				Type:       string(constants.HolidayType),
@@ -39,9 +40,9 @@ func BuildHolidayMessagesUpload(holidayID string, req request.UploadHolidayItem,
 	}
 }
 
-func BuildTermMessagesUpload(termID string, req term_request.UploadTermRequest, langID uint) dto.UploadMessageLanguagesRequest {
-	return dto.UploadMessageLanguagesRequest{
-		MessageLanguages: []dto.UploadMessageRequest{
+func BuildTermMessagesUpload(termID string, req term_request.UploadTermRequest, langID uint) gw_request.UploadMessageLanguagesRequest {
+	return gw_request.UploadMessageLanguagesRequest{
+		MessageLanguages: []gw_request.UploadMessageRequest{
 			{
 				TypeID:     termID,
 				Type:       string(constants.TermType),

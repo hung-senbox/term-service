@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"term-service/internal/gateway/dto"
+	"term-service/internal/gateway/dto/response"
 	"term-service/pkg/constants"
 	"term-service/pkg/helper"
 
@@ -12,8 +12,8 @@ import (
 )
 
 type OrganizationGateway interface {
-	GetOrganizationInfo(ctx context.Context, organizationID string) (*dto.OrganizationInfo, error)
-	GetAllOrg(ctx context.Context) ([]dto.OrganizationInfo, error)
+	GetOrganizationInfo(ctx context.Context, organizationID string) (*response.OrganizationInfo, error)
+	GetAllOrg(ctx context.Context) ([]response.OrganizationInfo, error)
 }
 
 type organizationGatewayImpl struct {
@@ -28,7 +28,7 @@ func NewOrganizationGateway(serviceName string, consulClient *api.Client) Organi
 	}
 }
 
-func (g *organizationGatewayImpl) GetOrganizationInfo(ctx context.Context, organizationID string) (*dto.OrganizationInfo, error) {
+func (g *organizationGatewayImpl) GetOrganizationInfo(ctx context.Context, organizationID string) (*response.OrganizationInfo, error) {
 	token, ok := ctx.Value(constants.Token).(string)
 	if !ok {
 		return nil, fmt.Errorf("token not found in context")
@@ -47,7 +47,7 @@ func (g *organizationGatewayImpl) GetOrganizationInfo(ctx context.Context, organ
 	}
 
 	// Unmarshal response theo format Gateway
-	var gwResp dto.APIGateWayResponse[dto.OrganizationInfo]
+	var gwResp response.APIGateWayResponse[response.OrganizationInfo]
 	if err := json.Unmarshal(resp, &gwResp); err != nil {
 		return nil, fmt.Errorf("unmarshal response fail: %w", err)
 	}
@@ -60,7 +60,7 @@ func (g *organizationGatewayImpl) GetOrganizationInfo(ctx context.Context, organ
 	return &gwResp.Data, nil
 }
 
-func (g *organizationGatewayImpl) GetAllOrg(ctx context.Context) ([]dto.OrganizationInfo, error) {
+func (g *organizationGatewayImpl) GetAllOrg(ctx context.Context) ([]response.OrganizationInfo, error) {
 	token, ok := ctx.Value(constants.Token).(string)
 	if !ok {
 		return nil, fmt.Errorf("token not found in context")
@@ -79,7 +79,7 @@ func (g *organizationGatewayImpl) GetAllOrg(ctx context.Context) ([]dto.Organiza
 	}
 
 	// Unmarshal response theo format Gateway
-	var gwResp dto.APIGateWayResponse[[]dto.OrganizationInfo]
+	var gwResp response.APIGateWayResponse[[]response.OrganizationInfo]
 	if err := json.Unmarshal(resp, &gwResp); err != nil {
 		return nil, fmt.Errorf("unmarshal response fail: %w", err)
 	}

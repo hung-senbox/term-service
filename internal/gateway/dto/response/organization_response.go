@@ -1,4 +1,4 @@
-package dto
+package response
 
 type OrganizationInfo struct {
 	ID               string                      `json:"id"`

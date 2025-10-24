@@ -12,9 +12,11 @@ type ServerConfig struct {
 }
 
 type DatabaseConfig struct {
-	Active string        `yaml:"active"` // "mysql" or "mongodb"
-	MySQL  MySQLConfig   `yaml:"mysql"`
-	Mongo  MongoDBConfig `yaml:"mongodb"`
+	Active     string           `yaml:"active"` // "mysql" or "mongodb"
+	MySQL      MySQLConfig      `yaml:"mysql"`
+	Mongo      MongoDBConfig    `yaml:"mongodb"`
+	Redis      RedisConfig      `yaml:"redis"`
+	RedisCache RedisCacheConfig `yaml:"redis_cache"`
 }
 
 type MySQLConfig struct {
@@ -31,6 +33,21 @@ type MongoDBConfig struct {
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
 	Name     string `yaml:"name"`
+}
+
+type RedisConfig struct {
+	Host     string `yaml:"host"`
+	Port     string `yaml:"port"`
+	Password string `yaml:"password"`
+	DB       int    `yaml:"db"`
+}
+
+type RedisCacheConfig struct {
+	TTLSeconds int    `yaml:"ttlSeconds"`
+	Host       string `yaml:"host"`
+	Port       string `yaml:"port"`
+	Password   string `yaml:"password"`
+	DB         int    `yaml:"db"`
 }
 
 type ConsulConfig struct {

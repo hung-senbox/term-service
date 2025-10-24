@@ -1,6 +1,7 @@
 package router
 
 import (
+	"term-service/internal/cache"
 	"term-service/internal/gateway"
 	holiday_handler "term-service/internal/holiday/handler"
 	holiday_repo "term-service/internal/holiday/repository"
@@ -10,25 +11,32 @@ import (
 	"term-service/internal/term/repository"
 	"term-service/internal/term/route"
 	"term-service/internal/term/service"
+	"term-service/pkg/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/consul/api"
 	"go.mongodb.org/mongo-driver/mongo"
+
+	cached_service "term-service/internal/cache/service"
+
+	goredis "github.com/redis/go-redis/v9"
 )
 
-func SetupRouter(termCollection *mongo.Collection, holidayCollection *mongo.Collection, consulClient *api.Client) *gin.Engine {
+func SetupRouter(consulClient *api.Client, cacheClient *goredis.Client, termCollection, holidayCollection *mongo.Collection) *gin.Engine {
 	r := gin.Default()
-	// consul
-	//consulClient, _ := api.NewClient(api.DefaultConfig())
 
 	// Gateway setup
 	userGateway := gateway.NewUserGateway("go-main-service", consulClient)
 	orgGateway := gateway.NewOrganizationGateway("go-main-service", consulClient)
 	messageLanguageGW := gateway.NewMessageLanguageGateway("go-main-service", consulClient)
 
+	// cache setup
+	appCache := cache.NewRedisCache(cacheClient)
+	cachedUserGateway := cached_service.NewCachedUserGateway(userGateway, appCache, config.AppConfig.Database.RedisCache.TTLSeconds)
+
 	// Term
 	termRepo := repository.NewTermRepository(termCollection)
-	termSvc := service.NewTermService(termRepo, userGateway, orgGateway, messageLanguageGW)
+	termSvc := service.NewTermService(termRepo, cachedUserGateway, orgGateway, messageLanguageGW)
 	termHandler := handler.NewHandler(termSvc)
 
 	// Holiday

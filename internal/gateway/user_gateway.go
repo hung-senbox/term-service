@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"term-service/internal/gateway/dto"
+	"term-service/internal/gateway/dto/response"
 	"term-service/logger"
 	"term-service/pkg/constants"
 	"term-service/pkg/helper"
@@ -19,9 +19,8 @@ type User struct {
 }
 
 type UserGateway interface {
-	GetAuthorInfo(ctx context.Context, userID string) (*User, error)
-	GetCurrentUser(ctx context.Context) (*dto.CurrentUser, error)
-	GetStudentInfo(ctx context.Context, studentID string) (*dto.StudentResponse, error)
+	GetCurrentUser(ctx context.Context) (*response.CurrentUser, error)
+	GetStudentInfo(ctx context.Context, studentID string) (*response.StudentResponse, error)
 }
 
 type userGatewayImpl struct {
@@ -36,35 +35,8 @@ func NewUserGateway(serviceName string, consulClient *api.Client) UserGateway {
 	}
 }
 
-// GetAuthorInfo lấy thông tin user từ service user
-func (g *userGatewayImpl) GetAuthorInfo(ctx context.Context, userID string) (*User, error) {
-	token, ok := ctx.Value("token").(string) // hoặc dùng constants.TokenKey
-	if !ok || token == "" {
-		return nil, fmt.Errorf("token not exist context")
-	}
-
-	client, err := NewGatewayClient(g.serviceName, token, g.consul, nil)
-	if err != nil {
-		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
-	}
-
-	headers := helper.GetHeaders(ctx)
-
-	resp, err := client.Call("GET", "/v1/user/"+userID, nil, headers)
-	if err != nil {
-		return nil, fmt.Errorf("Call API user fail: %w", err)
-	}
-
-	var user User
-	if err := json.Unmarshal(resp, &user); err != nil {
-		return nil, fmt.Errorf("encrypt response fail: %w", err)
-	}
-
-	return &user, nil
-}
-
 // GetCurrentUser
-func (g *userGatewayImpl) GetCurrentUser(ctx context.Context) (*dto.CurrentUser, error) {
+func (g *userGatewayImpl) GetCurrentUser(ctx context.Context) (*response.CurrentUser, error) {
 	token, ok := ctx.Value(constants.Token).(string)
 	if !ok {
 		logger.WriteLogEx("warn", "token not found in context", nil)
@@ -90,7 +62,7 @@ func (g *userGatewayImpl) GetCurrentUser(ctx context.Context) (*dto.CurrentUser,
 	}
 
 	// Unmarshal response theo format Gateway
-	var gwResp dto.APIGateWayResponse[dto.CurrentUser]
+	var gwResp response.APIGateWayResponse[response.CurrentUser]
 	if err := json.Unmarshal(resp, &gwResp); err != nil {
 		logger.WriteLogEx("error", "unmarshal response fail", map[string]any{
 			"error": string(resp),
@@ -110,7 +82,7 @@ func (g *userGatewayImpl) GetCurrentUser(ctx context.Context) (*dto.CurrentUser,
 	return &gwResp.Data, nil
 }
 
-func (g *userGatewayImpl) GetStudentInfo(ctx context.Context, studentID string) (*dto.StudentResponse, error) {
+func (g *userGatewayImpl) GetStudentInfo(ctx context.Context, studentID string) (*response.StudentResponse, error) {
 	token, ok := ctx.Value(constants.Token).(string)
 	if !ok {
 		return nil, fmt.Errorf("token not found in context")
@@ -129,7 +101,7 @@ func (g *userGatewayImpl) GetStudentInfo(ctx context.Context, studentID string) 
 	}
 
 	// Unmarshal response theo format Gateway
-	var gwResp dto.APIGateWayResponse[dto.StudentResponse]
+	var gwResp response.APIGateWayResponse[response.StudentResponse]
 	if err := json.Unmarshal(resp, &gwResp); err != nil {
 		return nil, fmt.Errorf("unmarshal response fail: %w", err)
 	}

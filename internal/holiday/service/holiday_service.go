@@ -5,7 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"term-service/internal/gateway"
-	"term-service/internal/gateway/dto"
+	gw_request "term-service/internal/gateway/dto/request"
+	gw_response "term-service/internal/gateway/dto/response"
 	"term-service/internal/holiday/dto/request"
 	"term-service/internal/holiday/dto/response"
 	"term-service/internal/holiday/mapper"
@@ -195,7 +196,7 @@ func (s *holidayService) GetHolidays4Web(ctx context.Context) (*response.GetHoli
 		for i := range holidayDTOs {
 			msgLangs, _ := s.messageLanguageGateway.GetMessageLanguages(ctx, "holiday", holidayDTOs[i].ID)
 			if msgLangs == nil {
-				msgLangs = []dto.MessageLanguageResponse{}
+				msgLangs = []gw_response.MessageLanguageResponse{}
 			}
 			holidayDTOs[i].MessageLanguages = msgLangs
 		}
@@ -219,7 +220,7 @@ func (s *holidayService) GetHolidays4Web(ctx context.Context) (*response.GetHoli
 	}, nil
 }
 
-func (s *holidayService) uploadMessages(ctx context.Context, req dto.UploadMessageLanguagesRequest) error {
+func (s *holidayService) uploadMessages(ctx context.Context, req gw_request.UploadMessageLanguagesRequest) error {
 	err := s.messageLanguageGateway.UploadMessages(ctx, req)
 
 	if err != nil {
