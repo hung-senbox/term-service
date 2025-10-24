@@ -417,3 +417,34 @@ func (g *fileGateway) GetPDFUrl(ctx context.Context, req request.GetFileUrlReque
 	return &gwResp.Data, nil
 
 }
+
+func (g *fileGateway) GetAvatarUrl(ctx context.Context, req request.GetAvatarUrlRequest) (*string, error) {
+
+	token, ok := ctx.Value(constants.Token).(string)
+	if !ok {
+		return nil, fmt.Errorf("token not found in context")
+	}
+
+	client, err := NewGatewayClient(g.serviceName, token, g.consul, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	headers := helper.GetHeaders(ctx)
+	resp, err := client.Call("POST", "/v1/gateway/images/avatar/get-url", req, headers)
+	if err != nil {
+		return nil, err
+	}
+
+	var gwResp response.APIGateWayResponse[string]
+	if err := json.Unmarshal(resp, &gwResp); err != nil {
+		return nil, fmt.Errorf("unmarshal response fail: %w", err)
+	}
+
+	if gwResp.StatusCode != 200 {
+		return nil, fmt.Errorf("call gateway get avatar fail: %s", gwResp.Message)
+	}
+
+	return &gwResp.Data, nil
+
+}
