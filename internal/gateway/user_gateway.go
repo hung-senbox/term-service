@@ -12,12 +12,6 @@ import (
 	"github.com/hashicorp/consul/api"
 )
 
-type User struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
-
 type UserGateway interface {
 	GetCurrentUser(ctx context.Context) (*response.CurrentUser, error)
 	GetUserByTeacher(ctx context.Context, teacherID string) (*response.CurrentUser, error)
