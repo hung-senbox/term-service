@@ -48,9 +48,11 @@ func main() {
 	//db
 	db.ConnectMongoDB()
 
-	cacheClient := db.InitRedisCache()
+	// redis cache
+	cacheClientRedis := db.InitRedisCache()
+	defer cacheClientRedis.Close()
 
-	r := router.SetupRouter(consulClient, cacheClient, db.TermCollection, db.HolidayCollection)
+	r := router.SetupRouter(consulClient, cacheClientRedis, db.TermCollection, db.HolidayCollection)
 	port := cfg.Server.Port
 	if err := r.Run(":" + port); err != nil {
 		log.Fatal("Failed to run server:", err)
