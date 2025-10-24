@@ -22,7 +22,7 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 )
 
-func SetupRouter(consulClient *api.Client, cacheClient *goredis.Client, termCollection, holidayCollection *mongo.Collection) *gin.Engine {
+func SetupRouter(consulClient *api.Client, cacheClientRedis *goredis.Client, termCollection, holidayCollection *mongo.Collection) *gin.Engine {
 	r := gin.Default()
 
 	// Gateway setup
@@ -31,8 +31,8 @@ func SetupRouter(consulClient *api.Client, cacheClient *goredis.Client, termColl
 	messageLanguageGW := gateway.NewMessageLanguageGateway("go-main-service", consulClient)
 
 	// cache setup
-	appCache := cache.NewRedisCache(cacheClient)
-	cachedUserGateway := cached_service.NewCachedUserGateway(userGateway, appCache, config.AppConfig.Database.RedisCache.TTLSeconds)
+	systemCache := cache.NewRedisCache(cacheClientRedis)
+	cachedUserGateway := cached_service.NewCachedUserGateway(userGateway, systemCache, config.AppConfig.Database.RedisCache.TTLSeconds)
 
 	// Term
 	termRepo := repository.NewTermRepository(termCollection)
